@@ -3,7 +3,7 @@ import { TripsService } from './trips.service';
 import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { envConfig } from '../../../common/configs/environment';
+import { envConfig, validateEnv } from '../../../common/configs/environment';
 
 const mockTripsList = [
   {
@@ -55,6 +55,7 @@ describe('TripsService', () => {
           load: [envConfig],
           envFilePath: '.env.test.local',
           expandVariables: true,
+          validate: validateEnv,
         }),
       ],
       providers: [

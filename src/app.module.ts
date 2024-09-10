@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TripsModule } from './modules/trips/trips.module';
-import { envConfig } from './common/configs/environment';
+import { envConfig, validateEnv } from './common/configs/environment';
 
 @Module({
   imports: [
@@ -9,6 +9,7 @@ import { envConfig } from './common/configs/environment';
       isGlobal: true,
       load: [envConfig],
       expandVariables: true,
+      validate: validateEnv,
     }),
     TripsModule,
   ],

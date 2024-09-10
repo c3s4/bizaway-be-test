@@ -1,4 +1,17 @@
-export interface Environment {
+import { plainToInstance } from 'class-transformer';
+import { IsNumber, IsString, IsUrl, Max, Min, validateSync } from 'class-validator';
+
+class EnvironmentData {
+  @IsNumber()
+  @Min(0)
+  @Max(65535)
+  SERVER_PORT: number;
+  @IsUrl()
+  PLANNER_API_URL: string;
+  @IsString()
+  PLANNER_API_KEY: string;
+}
+export class EnvironmentObject {
   serverPort: number;
   plannerApi: {
     url: string;
@@ -6,7 +19,17 @@ export interface Environment {
   };
 }
 
-export const envConfig = (): Environment => ({
+export function validateEnv(config: Record<string, unknown>) {
+  const validatedConfig = plainToInstance(EnvironmentData, config, { enableImplicitConversion: true });
+  const errors = validateSync(validatedConfig, { skipMissingProperties: false });
+
+  if (errors.length > 0) {
+    throw new Error(errors.toString());
+  }
+  return validatedConfig;
+}
+
+export const envConfig = (): EnvironmentObject => ({
   serverPort: parseInt(process.env.SERVER_PORT, 10) || 3000,
   plannerApi: {
     url: process.env.PLANNER_API_URL,
