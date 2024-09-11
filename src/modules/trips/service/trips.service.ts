@@ -9,7 +9,7 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { catchError, lastValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
-import { PagedRequestDto } from '../../../common/dtos/paged_results';
+import { PagedRequestDto } from '../../../common/dtos/paged_results.dto';
 import { PAGINATION } from '../../../common/configs/constants';
 
 @Injectable()

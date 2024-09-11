@@ -1,5 +1,5 @@
 import { IsEnum } from 'class-validator';
-import { PagedResponseDto } from '../../../common/dtos/paged_results';
+import { PagedResponseDto } from '../../../common/dtos/paged_results.dto';
 
 export enum SortBy {
   CHEAPEST = 'cheapest',

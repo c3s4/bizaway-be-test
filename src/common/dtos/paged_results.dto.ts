@@ -1,6 +1,15 @@
+import { IsNumber, IsOptional, Min } from 'class-validator';
+
 export class PagedRequestDto {
-  page: number;
-  itemsPerPage: number;
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  page?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  itemsPerPage?: number;
 }
 
 export abstract class PagedResponseDto<T> {
