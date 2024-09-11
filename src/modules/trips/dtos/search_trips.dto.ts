@@ -1,4 +1,4 @@
-import { PagedResults } from '../../../common/dtos/paged_results';
+import { PagedResponseDto } from '../../../common/dtos/paged_results';
 
 export type SortBy = 'fastest' | 'cheapest';
 export type PlaceCode =
@@ -79,4 +79,4 @@ export class SearchTripResponseDto {
   remoteId: string;
 }
 
-export class SearchTripsListResponseDto extends PagedResults<SearchTripResponseDto> {}
+export class SearchTripsListResponseDto extends PagedResponseDto<SearchTripResponseDto> {}
