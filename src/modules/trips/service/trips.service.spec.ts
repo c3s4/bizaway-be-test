@@ -81,10 +81,19 @@ describe('TripsService', () => {
   it('should call external API as expected', async () => {
     await tripsService.searchTripsFromIntegration({ origin: 'AMS', destination: 'FRA' });
     expect(configService.get('plannerApi.url')).toBeDefined();
-    expect(httpService.get).toHaveBeenCalledWith(`${configService.get('plannerApi.url')}?origin=AMS&destination=FRA`);
+    expect(configService.get('plannerApi.key')).toBeDefined();
+    expect(httpService.get).toHaveBeenCalledWith(`${configService.get('plannerApi.url')}?origin=AMS&destination=FRA`, {
+      headers: {
+        'x-api-key': configService.get('plannerApi.key'),
+      },
+    });
 
     await tripsService.searchTripsFromIntegration({ origin: 'BCN', destination: 'EWR' });
-    expect(httpService.get).toHaveBeenCalledWith(`${configService.get('plannerApi.url')}?origin=BCN&destination=EWR`);
+    expect(httpService.get).toHaveBeenCalledWith(`${configService.get('plannerApi.url')}?origin=BCN&destination=EWR`, {
+      headers: {
+        'x-api-key': configService.get('plannerApi.key'),
+      },
+    });
   });
 
   it('should return unsorted list of trips', async () => {

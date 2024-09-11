@@ -20,9 +20,14 @@ export class TripsService {
   async searchTripsFromIntegration(searchParams: SearchTripsRequestDto): Promise<SearchTripsListResponseDto> {
     const response = await lastValueFrom(
       this.httpService
-        .get<
-          SearchTripIntegrationResponseDto[]
-        >(`${this.configService.get('plannerApi.url')}?origin=${searchParams.origin}&destination=${searchParams.destination}`)
+        .get<SearchTripIntegrationResponseDto[]>(
+          `${this.configService.get('plannerApi.url')}?origin=${searchParams.origin}&destination=${searchParams.destination}`,
+          {
+            headers: {
+              'x-api-key': this.configService.get('plannerApi.key'),
+            },
+          },
+        )
         .pipe(
           catchError((error: any) => {
             this.logger.error(error.response.data);
