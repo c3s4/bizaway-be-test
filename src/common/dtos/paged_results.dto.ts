@@ -1,3 +1,4 @@
+import { Expose } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
 
 export class PagedRequestDto {
@@ -9,6 +10,7 @@ export class PagedRequestDto {
   @IsOptional()
   @IsNumber()
   @Min(1)
+  @Expose({ name: 'items_per_page' })
   itemsPerPage?: number;
 }
 

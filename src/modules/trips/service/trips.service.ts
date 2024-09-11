@@ -9,7 +9,6 @@ import {
 import { HttpService } from '@nestjs/axios';
 import { catchError, lastValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
-import { PagedRequestDto } from '../../../common/dtos/paged_results.dto';
 import { PAGINATION } from '../../../common/configs/constants';
 
 @Injectable()
@@ -20,17 +19,19 @@ export class TripsService {
     private configService: ConfigService,
   ) {}
 
-  async searchTripsFromIntegration(
-    searchParams: SearchTripsRequestDto,
-    paginationParams: PagedRequestDto = {
-      page: PAGINATION.DEFAULT_PAGE,
-      itemsPerPage: PAGINATION.DEFAULT_ITEMS_PER_PAGE,
-    },
-  ): Promise<SearchTripsListResponseDto> {
+  async searchTripsFromIntegration(searchParams: SearchTripsRequestDto): Promise<SearchTripsListResponseDto> {
+    const {
+      origin,
+      destination,
+      itemsPerPage = PAGINATION.DEFAULT_ITEMS_PER_PAGE,
+      page = PAGINATION.DEFAULT_PAGE,
+      sortBy,
+    } = searchParams;
+
     const response = await lastValueFrom(
       this.httpService
         .get<SearchTripIntegrationResponseDto[]>(
-          `${this.configService.get('plannerApi.url')}?origin=${searchParams.origin}&destination=${searchParams.destination}`,
+          `${this.configService.get('plannerApi.url')}?origin=${origin}&destination=${destination}`,
           {
             headers: {
               'x-api-key': this.configService.get('plannerApi.key'),
@@ -45,6 +46,8 @@ export class TripsService {
         ),
     );
 
+    this.logger.log(`Successfully fetched trips from external API. Trips count: ${response.data.length}`);
+
     const remappedResponse = response.data.map<SearchTripResponseDto>((trip) => {
       return {
         origin: trip.origin,
@@ -57,25 +60,25 @@ export class TripsService {
       };
     });
 
-    if (searchParams.sortBy) {
+    if (sortBy) {
       remappedResponse.sort((a, b) => {
-        if (searchParams.sortBy === SortBy.CHEAPEST) {
+        if (sortBy === SortBy.CHEAPEST) {
           return a.cost - b.cost;
-        } else if (searchParams.sortBy === SortBy.FASTEST) {
+        } else if (sortBy === SortBy.FASTEST) {
           return a.duration - b.duration;
         }
       });
     }
 
-    const startingIndex = (paginationParams.page - 1) * paginationParams.itemsPerPage;
-    const endingIndex = startingIndex + paginationParams.itemsPerPage;
+    const startingIndex = (page - 1) * itemsPerPage;
+    const endingIndex = startingIndex + itemsPerPage;
 
     return {
       items: remappedResponse.slice(startingIndex, endingIndex),
-      currentPage: paginationParams.page,
-      totalPages: Math.ceil(remappedResponse.length / paginationParams.itemsPerPage),
+      currentPage: page,
+      totalPages: Math.ceil(remappedResponse.length / itemsPerPage),
       totalItems: remappedResponse.length,
-      itemsPerPage: paginationParams.itemsPerPage,
+      itemsPerPage: itemsPerPage,
     };
   }
 }

@@ -156,16 +156,12 @@ describe('TripsService', () => {
   });
 
   it('should return paginated results', async () => {
-    let tripsLits = await tripsService.searchTripsFromIntegration(
-      {
-        origin: PlaceCode.AMS,
-        destination: PlaceCode.FRA,
-      },
-      {
-        page: 1,
-        itemsPerPage: 2,
-      },
-    );
+    let tripsLits = await tripsService.searchTripsFromIntegration({
+      origin: PlaceCode.AMS,
+      destination: PlaceCode.FRA,
+      page: 1,
+      itemsPerPage: 2,
+    });
     expect(tripsLits.items).toHaveLength(2);
     expect(tripsLits.currentPage).toEqual(1);
     expect(tripsLits.totalPages).toEqual(2);
@@ -182,16 +178,12 @@ describe('TripsService', () => {
       display_name: mockTripsList[0].display_name,
     });
 
-    tripsLits = await tripsService.searchTripsFromIntegration(
-      {
-        origin: PlaceCode.AMS,
-        destination: PlaceCode.FRA,
-      },
-      {
-        page: 2,
-        itemsPerPage: 2,
-      },
-    );
+    tripsLits = await tripsService.searchTripsFromIntegration({
+      origin: PlaceCode.AMS,
+      destination: PlaceCode.FRA,
+      page: 2,
+      itemsPerPage: 2,
+    });
 
     expect(tripsLits.currentPage).toEqual(2);
     expect(tripsLits.items[0]).toEqual({
@@ -204,16 +196,12 @@ describe('TripsService', () => {
       display_name: mockTripsList[2].display_name,
     });
 
-    tripsLits = await tripsService.searchTripsFromIntegration(
-      {
-        origin: PlaceCode.AMS,
-        destination: PlaceCode.FRA,
-      },
-      {
-        page: 2,
-        itemsPerPage: 1,
-      },
-    );
+    tripsLits = await tripsService.searchTripsFromIntegration({
+      origin: PlaceCode.AMS,
+      destination: PlaceCode.FRA,
+      page: 2,
+      itemsPerPage: 1,
+    });
 
     expect(tripsLits.items).toHaveLength(1);
     expect(tripsLits.currentPage).toEqual(2);
@@ -232,17 +220,13 @@ describe('TripsService', () => {
   });
 
   it('should return sorted paginated results', async () => {
-    let tripsLits = await tripsService.searchTripsFromIntegration(
-      {
-        origin: PlaceCode.AMS,
-        destination: PlaceCode.FRA,
-        sortBy: SortBy.CHEAPEST,
-      },
-      {
-        page: 2,
-        itemsPerPage: 2,
-      },
-    );
+    let tripsLits = await tripsService.searchTripsFromIntegration({
+      origin: PlaceCode.AMS,
+      destination: PlaceCode.FRA,
+      sortBy: SortBy.CHEAPEST,
+      page: 2,
+      itemsPerPage: 2,
+    });
 
     expect(tripsLits.items).toHaveLength(2);
     expect(tripsLits.currentPage).toEqual(2);
@@ -259,17 +243,13 @@ describe('TripsService', () => {
       display_name: mockTripsList[1].display_name,
     });
 
-    tripsLits = await tripsService.searchTripsFromIntegration(
-      {
-        origin: PlaceCode.AMS,
-        destination: PlaceCode.FRA,
-        sortBy: SortBy.CHEAPEST,
-      },
-      {
-        page: 20,
-        itemsPerPage: 2,
-      },
-    );
+    tripsLits = await tripsService.searchTripsFromIntegration({
+      origin: PlaceCode.AMS,
+      destination: PlaceCode.FRA,
+      sortBy: SortBy.CHEAPEST,
+      page: 20,
+      itemsPerPage: 2,
+    });
 
     expect(tripsLits.items).toHaveLength(0);
     expect(tripsLits.currentPage).toEqual(20);

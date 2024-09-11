@@ -1,6 +1,7 @@
 import { IsEnum, IsOptional } from 'class-validator';
-import { PagedResponseDto } from '../../../common/dtos/paged_results.dto';
+import { PagedRequestDto, PagedResponseDto } from '../../../common/dtos/paged_results.dto';
 import { Expose } from 'class-transformer';
+import { PartialType } from '@nestjs/mapped-types';
 
 export enum SortBy {
   CHEAPEST = 'cheapest',
@@ -59,7 +60,7 @@ export enum PlaceCode {
   HEL = 'HEL',
   VIE = 'VIE',
 }
-export class SearchTripsRequestDto {
+export class SearchTripsRequestDto extends PartialType(PagedRequestDto) {
   @IsEnum(PlaceCode)
   origin: PlaceCode;
   @IsEnum(PlaceCode)
