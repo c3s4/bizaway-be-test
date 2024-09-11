@@ -232,7 +232,7 @@ describe('TripsService', () => {
   });
 
   it('should return sorted paginated results', async () => {
-    const tripsLits = await tripsService.searchTripsFromIntegration(
+    let tripsLits = await tripsService.searchTripsFromIntegration(
       {
         origin: PlaceCode.AMS,
         destination: PlaceCode.FRA,
@@ -258,5 +258,23 @@ describe('TripsService', () => {
       remoteId: mockTripsList[1].id,
       display_name: mockTripsList[1].display_name,
     });
+
+    tripsLits = await tripsService.searchTripsFromIntegration(
+      {
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        sort_by: SortBy.CHEAPEST,
+      },
+      {
+        page: 20,
+        itemsPerPage: 2,
+      },
+    );
+
+    expect(tripsLits.items).toHaveLength(0);
+    expect(tripsLits.currentPage).toEqual(20);
+    expect(tripsLits.totalPages).toEqual(2);
+    expect(tripsLits.totalItems).toEqual(mockTripsList.length);
+    expect(tripsLits.itemsPerPage).toEqual(2);
   });
 });
