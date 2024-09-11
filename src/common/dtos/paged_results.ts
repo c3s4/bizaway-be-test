@@ -1,5 +1,8 @@
-export abstract class PagedResults<T> {
-export abstract class PagedResponse<T> {
+export class PagedRequestDto {
+  page: number;
+  itemsPerPage: number;
+}
+
 export abstract class PagedResponseDto<T> {
   items: T[];
   currentPage: number;

@@ -144,4 +144,109 @@ describe('TripsService', () => {
     expect(tripsLits.items[3].remoteId).toEqual('8e3204f8-7ffc-43b0-ab33-1e57badd9399');
     expect(tripsLits.items[3].duration).toEqual(47);
   });
+
+  it('should return paginated results', async () => {
+    let tripsLits = await tripsService.searchTripsFromIntegration(
+      {
+        origin: 'AMS',
+        destination: 'FRA',
+      },
+      {
+        page: 1,
+        itemsPerPage: 2,
+      },
+    );
+    expect(tripsLits.items).toHaveLength(2);
+    expect(tripsLits.currentPage).toEqual(1);
+    expect(tripsLits.totalPages).toEqual(2);
+    expect(tripsLits.totalItems).toEqual(mockTripsList.length);
+    expect(tripsLits.itemsPerPage).toEqual(2);
+
+    expect(tripsLits.items[0]).toEqual({
+      origin: mockTripsList[0].origin,
+      destination: mockTripsList[0].destination,
+      cost: mockTripsList[0].cost,
+      duration: mockTripsList[0].duration,
+      type: mockTripsList[0].type,
+      remoteId: mockTripsList[0].id,
+      display_name: mockTripsList[0].display_name,
+    });
+
+    tripsLits = await tripsService.searchTripsFromIntegration(
+      {
+        origin: 'AMS',
+        destination: 'FRA',
+      },
+      {
+        page: 2,
+        itemsPerPage: 2,
+      },
+    );
+
+    expect(tripsLits.currentPage).toEqual(2);
+    expect(tripsLits.items[0]).toEqual({
+      origin: mockTripsList[2].origin,
+      destination: mockTripsList[2].destination,
+      cost: mockTripsList[2].cost,
+      duration: mockTripsList[2].duration,
+      type: mockTripsList[2].type,
+      remoteId: mockTripsList[2].id,
+      display_name: mockTripsList[2].display_name,
+    });
+
+    tripsLits = await tripsService.searchTripsFromIntegration(
+      {
+        origin: 'AMS',
+        destination: 'FRA',
+      },
+      {
+        page: 2,
+        itemsPerPage: 1,
+      },
+    );
+
+    expect(tripsLits.items).toHaveLength(1);
+    expect(tripsLits.currentPage).toEqual(2);
+    expect(tripsLits.totalPages).toEqual(4);
+    expect(tripsLits.totalItems).toEqual(mockTripsList.length);
+    expect(tripsLits.itemsPerPage).toEqual(1);
+    expect(tripsLits.items[0]).toEqual({
+      origin: mockTripsList[1].origin,
+      destination: mockTripsList[1].destination,
+      cost: mockTripsList[1].cost,
+      duration: mockTripsList[1].duration,
+      type: mockTripsList[1].type,
+      remoteId: mockTripsList[1].id,
+      display_name: mockTripsList[1].display_name,
+    });
+  });
+
+  it('should return sorted paginated results', async () => {
+    const tripsLits = await tripsService.searchTripsFromIntegration(
+      {
+        origin: 'AMS',
+        destination: 'FRA',
+        sort_by: 'cheapest',
+      },
+      {
+        page: 2,
+        itemsPerPage: 2,
+      },
+    );
+
+    expect(tripsLits.items).toHaveLength(2);
+    expect(tripsLits.currentPage).toEqual(2);
+    expect(tripsLits.totalPages).toEqual(2);
+    expect(tripsLits.totalItems).toEqual(mockTripsList.length);
+    expect(tripsLits.itemsPerPage).toEqual(2);
+    expect(tripsLits.items[0]).toEqual({
+      origin: mockTripsList[1].origin,
+      destination: mockTripsList[1].destination,
+      cost: mockTripsList[1].cost,
+      duration: mockTripsList[1].duration,
+      type: mockTripsList[1].type,
+      remoteId: mockTripsList[1].id,
+      display_name: mockTripsList[1].display_name,
+    });
+  });
 });
