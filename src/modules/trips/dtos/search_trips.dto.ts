@@ -1,4 +1,4 @@
-import { IsEnum } from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
 import { PagedResponseDto } from '../../../common/dtos/paged_results.dto';
 
 export enum SortBy {
@@ -61,9 +61,10 @@ export enum PlaceCode {
 export class SearchTripsRequestDto {
   @IsEnum(PlaceCode)
   origin: PlaceCode;
-
+  @IsEnum(PlaceCode)
   destination: PlaceCode;
-
+  @IsOptional()
+  @IsEnum(SortBy)
   sort_by?: SortBy;
 }
 
