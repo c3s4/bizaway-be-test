@@ -4,8 +4,6 @@ import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envConfig, validateEnv } from '../../../common/configs/environment';
-import exp from 'constants';
-import e from 'express';
 
 const mockTripsList = [
   {
