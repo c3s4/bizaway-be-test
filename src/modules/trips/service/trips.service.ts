@@ -57,11 +57,11 @@ export class TripsService {
       };
     });
 
-    if (searchParams.sort_by) {
+    if (searchParams.sortBy) {
       remappedResponse.sort((a, b) => {
-        if (searchParams.sort_by === SortBy.CHEAPEST) {
+        if (searchParams.sortBy === SortBy.CHEAPEST) {
           return a.cost - b.cost;
-        } else if (searchParams.sort_by === SortBy.FASTEST) {
+        } else if (searchParams.sortBy === SortBy.FASTEST) {
           return a.duration - b.duration;
         }
       });

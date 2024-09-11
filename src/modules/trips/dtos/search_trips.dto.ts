@@ -1,5 +1,6 @@
 import { IsEnum, IsOptional } from 'class-validator';
 import { PagedResponseDto } from '../../../common/dtos/paged_results.dto';
+import { Expose } from 'class-transformer';
 
 export enum SortBy {
   CHEAPEST = 'cheapest',
@@ -64,8 +65,9 @@ export class SearchTripsRequestDto {
   @IsEnum(PlaceCode)
   destination: PlaceCode;
   @IsOptional()
-  @IsEnum(SortBy)
-  sort_by?: SortBy;
+  @IsEnum(SortBy, { message: 'Invalid sort_by value, must be one of [cheapest, fastest]' })
+  @Expose({ name: 'sort_by' })
+  sortBy?: SortBy;
 }
 
 export class SearchTripIntegrationResponseDto {

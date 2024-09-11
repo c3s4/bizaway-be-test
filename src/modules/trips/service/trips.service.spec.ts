@@ -125,7 +125,7 @@ describe('TripsService', () => {
     const tripsLits = await tripsService.searchTripsFromIntegration({
       origin: PlaceCode.AMS,
       destination: PlaceCode.FRA,
-      sort_by: SortBy.CHEAPEST,
+      sortBy: SortBy.CHEAPEST,
     });
     expect(tripsLits.items).toHaveLength(mockTripsList.length);
     expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
@@ -142,7 +142,7 @@ describe('TripsService', () => {
     const tripsLits = await tripsService.searchTripsFromIntegration({
       origin: PlaceCode.AMS,
       destination: PlaceCode.FRA,
-      sort_by: SortBy.FASTEST,
+      sortBy: SortBy.FASTEST,
     });
     expect(tripsLits.items).toHaveLength(mockTripsList.length);
     expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
@@ -236,7 +236,7 @@ describe('TripsService', () => {
       {
         origin: PlaceCode.AMS,
         destination: PlaceCode.FRA,
-        sort_by: SortBy.CHEAPEST,
+        sortBy: SortBy.CHEAPEST,
       },
       {
         page: 2,
@@ -263,7 +263,7 @@ describe('TripsService', () => {
       {
         origin: PlaceCode.AMS,
         destination: PlaceCode.FRA,
-        sort_by: SortBy.CHEAPEST,
+        sortBy: SortBy.CHEAPEST,
       },
       {
         page: 20,
