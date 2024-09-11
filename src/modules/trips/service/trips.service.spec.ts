@@ -4,6 +4,8 @@ import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envConfig, validateEnv } from '../../../common/configs/environment';
+import exp from 'constants';
+import e from 'express';
 
 const mockTripsList = [
   {
@@ -78,39 +80,61 @@ describe('TripsService', () => {
     expect(tripsService).toBeDefined();
   });
 
-  it('should return unsorted list of trips', async () => {
-    const tripsLits = await tripsService.searchTripsFromIntegration({ origin: 'AMS', destination: 'FRA' });
-    mockTripsList.forEach((trip, index) => {
-      expect(tripsLits.items[index]).toEqual({
-        origin: trip.origin,
-        destination: trip.destination,
-        cost: trip.cost,
-        duration: trip.duration,
-        type: trip.type,
-        remoteId: trip.id,
-        display_name: trip.display_name,
-      });
-    });
-  });
-
-  it('should return unsorted list of trips', async () => {
-    const tripsLits = await tripsService.searchTripsFromIntegration({ origin: 'AMS', destination: 'FRA' });
-    mockTripsList.forEach((trip, index) => {
-      expect(tripsLits.items[index]).toEqual({
-        origin: trip.origin,
-        destination: trip.destination,
-        cost: trip.cost,
-        duration: trip.duration,
-        type: trip.type,
-        remoteId: trip.id,
-        display_name: trip.display_name,
-      });
-    });
-  });
-
-  it('should call external API', async () => {
+  it('should call external API as expected', async () => {
     await tripsService.searchTripsFromIntegration({ origin: 'AMS', destination: 'FRA' });
     expect(configService.get('plannerApi.url')).toBeDefined();
     expect(httpService.get).toHaveBeenCalledWith(`${configService.get('plannerApi.url')}?origin=AMS&destination=FRA`);
+
+    await tripsService.searchTripsFromIntegration({ origin: 'BCN', destination: 'EWR' });
+    expect(httpService.get).toHaveBeenCalledWith(`${configService.get('plannerApi.url')}?origin=BCN&destination=EWR`);
+  });
+
+  it('should return unsorted list of trips', async () => {
+    const tripsLits = await tripsService.searchTripsFromIntegration({ origin: 'AMS', destination: 'FRA' });
+    mockTripsList.forEach((trip, index) => {
+      expect(tripsLits.items[index]).toEqual({
+        origin: trip.origin,
+        destination: trip.destination,
+        cost: trip.cost,
+        duration: trip.duration,
+        type: trip.type,
+        remoteId: trip.id,
+        display_name: trip.display_name,
+      });
+    });
+  });
+
+  it('should return list of trips sorted by cheapest', async () => {
+    const tripsLits = await tripsService.searchTripsFromIntegration({
+      origin: 'AMS',
+      destination: 'FRA',
+      sort_by: 'cheapest',
+    });
+    expect(tripsLits.items).toHaveLength(mockTripsList.length);
+    expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
+    expect(tripsLits.items[0].cost).toEqual(2700);
+    expect(tripsLits.items[1].remoteId).toEqual('a387d04a-5619-444a-b4bc-9a817a2d5370');
+    expect(tripsLits.items[1].cost).toEqual(3140);
+    expect(tripsLits.items[2].remoteId).toEqual('52aaf4fb-2f17-4e0b-b4c9-de195b1bb425');
+    expect(tripsLits.items[2].cost).toEqual(5418);
+    expect(tripsLits.items[3].remoteId).toEqual('8e3204f8-7ffc-43b0-ab33-1e57badd9399');
+    expect(tripsLits.items[3].cost).toEqual(7399);
+  });
+
+  it('should return list of trips sorted by fastest', async () => {
+    const tripsLits = await tripsService.searchTripsFromIntegration({
+      origin: 'AMS',
+      destination: 'FRA',
+      sort_by: 'fastest',
+    });
+    expect(tripsLits.items).toHaveLength(mockTripsList.length);
+    expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
+    expect(tripsLits.items[0].duration).toEqual(6);
+    expect(tripsLits.items[1].remoteId).toEqual('52aaf4fb-2f17-4e0b-b4c9-de195b1bb425');
+    expect(tripsLits.items[1].duration).toEqual(40);
+    expect(tripsLits.items[2].remoteId).toEqual('a387d04a-5619-444a-b4bc-9a817a2d5370');
+    expect(tripsLits.items[2].duration).toEqual(42);
+    expect(tripsLits.items[3].remoteId).toEqual('8e3204f8-7ffc-43b0-ab33-1e57badd9399');
+    expect(tripsLits.items[3].duration).toEqual(47);
   });
 });

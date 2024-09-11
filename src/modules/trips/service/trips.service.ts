@@ -43,6 +43,16 @@ export class TripsService {
       };
     });
 
+    if (searchParams.sort_by) {
+      remappedResponse.sort((a, b) => {
+        if (searchParams.sort_by === 'cheapest') {
+          return a.cost - b.cost;
+        } else if (searchParams.sort_by === 'fastest') {
+          return a.duration - b.duration;
+        }
+      });
+    }
+
     return {
       items: remappedResponse,
       currentPage: 1,
