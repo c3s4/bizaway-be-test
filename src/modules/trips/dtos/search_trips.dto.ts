@@ -1,61 +1,69 @@
+import { IsEnum } from 'class-validator';
 import { PagedResponseDto } from '../../../common/dtos/paged_results';
 
-export type SortBy = 'fastest' | 'cheapest';
-export type PlaceCode =
-  | 'ATL'
-  | 'PEK'
-  | 'LAX'
-  | 'DXB'
-  | 'HND'
-  | 'ORD'
-  | 'LHR'
-  | 'PVG'
-  | 'CDG'
-  | 'DFW'
-  | 'AMS'
-  | 'FRA'
-  | 'IST'
-  | 'CAN'
-  | 'JFK'
-  | 'SIN'
-  | 'DEN'
-  | 'ICN'
-  | 'BKK'
-  | 'SFO'
-  | 'LAS'
-  | 'CLT'
-  | 'MIA'
-  | 'KUL'
-  | 'SEA'
-  | 'MUC'
-  | 'EWR'
-  | 'MAD'
-  | 'HKG'
-  | 'MCO'
-  | 'PHX'
-  | 'IAH'
-  | 'SYD'
-  | 'MEL'
-  | 'GRU'
-  | 'YYZ'
-  | 'LGW'
-  | 'BCN'
-  | 'MAN'
-  | 'BOM'
-  | 'DEL'
-  | 'ZRH'
-  | 'SVO'
-  | 'DME'
-  | 'JNB'
-  | 'ARN'
-  | 'OSL'
-  | 'CPH'
-  | 'HEL'
-  | 'VIE';
+export enum SortBy {
+  CHEAPEST = 'cheapest',
+  FASTEST = 'fastest',
+}
 
+export enum PlaceCode {
+  ATL = 'ATL',
+  PEK = 'PEK',
+  LAX = 'LAX',
+  DXB = 'DXB',
+  HND = 'HND',
+  ORD = 'ORD',
+  LHR = 'LHR',
+  PVG = 'PVG',
+  CDG = 'CDG',
+  DFW = 'DFW',
+  AMS = 'AMS',
+  FRA = 'FRA',
+  IST = 'IST',
+  CAN = 'CAN',
+  JFK = 'JFK',
+  SIN = 'SIN',
+  DEN = 'DEN',
+  ICN = 'ICN',
+  BKK = 'BKK',
+  SFO = 'SFO',
+  LAS = 'LAS',
+  CLT = 'CLT',
+  MIA = 'MIA',
+  KUL = 'KUL',
+  SEA = 'SEA',
+  MUC = 'MUC',
+  EWR = 'EWR',
+  MAD = 'MAD',
+  HKG = 'HKG',
+  MCO = 'MCO',
+  PHX = 'PHX',
+  IAH = 'IAH',
+  SYD = 'SYD',
+  MEL = 'MEL',
+  GRU = 'GRU',
+  YYZ = 'YYZ',
+  LGW = 'LGW',
+  BCN = 'BCN',
+  MAN = 'MAN',
+  BOM = 'BOM',
+  DEL = 'DEL',
+  ZRH = 'ZRH',
+  SVO = 'SVO',
+  DME = 'DME',
+  JNB = 'JNB',
+  ARN = 'ARN',
+  OSL = 'OSL',
+  CPH = 'CPH',
+  HEL = 'HEL',
+  VIE = 'VIE',
+}
 export class SearchTripsRequestDto {
+  @IsEnum(PlaceCode)
   origin: PlaceCode;
+
   destination: PlaceCode;
+
   sort_by?: SortBy;
 }
 

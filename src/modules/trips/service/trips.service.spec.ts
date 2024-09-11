@@ -4,6 +4,7 @@ import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envConfig, validateEnv } from '../../../common/configs/environment';
+import { PlaceCode, SortBy } from '../dtos/search_trips.dto';
 
 const mockTripsList = [
   {
@@ -79,25 +80,34 @@ describe('TripsService', () => {
   });
 
   it('should call external API as expected', async () => {
-    await tripsService.searchTripsFromIntegration({ origin: 'AMS', destination: 'FRA' });
+    await tripsService.searchTripsFromIntegration({ origin: PlaceCode.AMS, destination: PlaceCode.FRA });
     expect(configService.get('plannerApi.url')).toBeDefined();
     expect(configService.get('plannerApi.key')).toBeDefined();
-    expect(httpService.get).toHaveBeenCalledWith(`${configService.get('plannerApi.url')}?origin=AMS&destination=FRA`, {
-      headers: {
-        'x-api-key': configService.get('plannerApi.key'),
+    expect(httpService.get).toHaveBeenCalledWith(
+      `${configService.get('plannerApi.url')}?origin=${PlaceCode.AMS}&destination=${PlaceCode.FRA}`,
+      {
+        headers: {
+          'x-api-key': configService.get('plannerApi.key'),
+        },
       },
-    });
+    );
 
-    await tripsService.searchTripsFromIntegration({ origin: 'BCN', destination: 'EWR' });
-    expect(httpService.get).toHaveBeenCalledWith(`${configService.get('plannerApi.url')}?origin=BCN&destination=EWR`, {
-      headers: {
-        'x-api-key': configService.get('plannerApi.key'),
+    await tripsService.searchTripsFromIntegration({ origin: PlaceCode.BCN, destination: PlaceCode.EWR });
+    expect(httpService.get).toHaveBeenCalledWith(
+      `${configService.get('plannerApi.url')}?origin=${PlaceCode.BCN}&destination=${PlaceCode.EWR}`,
+      {
+        headers: {
+          'x-api-key': configService.get('plannerApi.key'),
+        },
       },
-    });
+    );
   });
 
   it('should return unsorted list of trips', async () => {
-    const tripsLits = await tripsService.searchTripsFromIntegration({ origin: 'AMS', destination: 'FRA' });
+    const tripsLits = await tripsService.searchTripsFromIntegration({
+      origin: PlaceCode.AMS,
+      destination: PlaceCode.FRA,
+    });
     mockTripsList.forEach((trip, index) => {
       expect(tripsLits.items[index]).toEqual({
         origin: trip.origin,
@@ -113,9 +123,9 @@ describe('TripsService', () => {
 
   it('should return list of trips sorted by cheapest', async () => {
     const tripsLits = await tripsService.searchTripsFromIntegration({
-      origin: 'AMS',
-      destination: 'FRA',
-      sort_by: 'cheapest',
+      origin: PlaceCode.AMS,
+      destination: PlaceCode.FRA,
+      sort_by: SortBy.CHEAPEST,
     });
     expect(tripsLits.items).toHaveLength(mockTripsList.length);
     expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
@@ -130,9 +140,9 @@ describe('TripsService', () => {
 
   it('should return list of trips sorted by fastest', async () => {
     const tripsLits = await tripsService.searchTripsFromIntegration({
-      origin: 'AMS',
-      destination: 'FRA',
-      sort_by: 'fastest',
+      origin: PlaceCode.AMS,
+      destination: PlaceCode.FRA,
+      sort_by: SortBy.FASTEST,
     });
     expect(tripsLits.items).toHaveLength(mockTripsList.length);
     expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
@@ -148,8 +158,8 @@ describe('TripsService', () => {
   it('should return paginated results', async () => {
     let tripsLits = await tripsService.searchTripsFromIntegration(
       {
-        origin: 'AMS',
-        destination: 'FRA',
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
       },
       {
         page: 1,
@@ -174,8 +184,8 @@ describe('TripsService', () => {
 
     tripsLits = await tripsService.searchTripsFromIntegration(
       {
-        origin: 'AMS',
-        destination: 'FRA',
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
       },
       {
         page: 2,
@@ -196,8 +206,8 @@ describe('TripsService', () => {
 
     tripsLits = await tripsService.searchTripsFromIntegration(
       {
-        origin: 'AMS',
-        destination: 'FRA',
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
       },
       {
         page: 2,
@@ -224,9 +234,9 @@ describe('TripsService', () => {
   it('should return sorted paginated results', async () => {
     const tripsLits = await tripsService.searchTripsFromIntegration(
       {
-        origin: 'AMS',
-        destination: 'FRA',
-        sort_by: 'cheapest',
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        sort_by: SortBy.CHEAPEST,
       },
       {
         page: 2,

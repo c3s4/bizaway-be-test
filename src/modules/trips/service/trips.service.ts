@@ -4,6 +4,7 @@ import {
   SearchTripResponseDto,
   SearchTripsListResponseDto,
   SearchTripsRequestDto,
+  SortBy,
 } from '../dtos/search_trips.dto';
 import { HttpService } from '@nestjs/axios';
 import { catchError, lastValueFrom } from 'rxjs';
@@ -58,9 +59,9 @@ export class TripsService {
 
     if (searchParams.sort_by) {
       remappedResponse.sort((a, b) => {
-        if (searchParams.sort_by === 'cheapest') {
+        if (searchParams.sort_by === SortBy.CHEAPEST) {
           return a.cost - b.cost;
-        } else if (searchParams.sort_by === 'fastest') {
+        } else if (searchParams.sort_by === SortBy.FASTEST) {
           return a.duration - b.duration;
         }
       });
