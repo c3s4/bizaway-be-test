@@ -10,7 +10,7 @@ export class TripsController {
   @Get('/search')
   async searchTrips(@Query() searchParams: SearchTripsRequestDto): Promise<SearchTripsListResponseDto> {
     const foundTrips = await this.tripService.searchTripsFromIntegration(searchParams);
-    if (foundTrips && searchParams.page && foundTrips.totalPages < searchParams.page) {
+    if (foundTrips && searchParams.page && searchParams.page > 1 && foundTrips.totalPages < searchParams.page) {
       throw new BadRequestException('Page number is too high');
     }
     return foundTrips;
