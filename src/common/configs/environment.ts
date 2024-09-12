@@ -34,6 +34,9 @@ export class EnvironmentObject {
     url: string;
     key: string;
   };
+  database: {
+    url: string;
+  };
 }
 
 export function validateEnv(config: Record<string, unknown>) {
@@ -51,5 +54,8 @@ export const envConfig = (): EnvironmentObject => ({
   plannerApi: {
     url: process.env.PLANNER_API_URL,
     key: process.env.PLANNER_API_KEY,
+  },
+  database: {
+    url: process.env.DATABASE_URL,
   },
 });
