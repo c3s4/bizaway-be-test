@@ -10,12 +10,32 @@ class EnvironmentData {
   PLANNER_API_URL: string;
   @IsString()
   PLANNER_API_KEY: string;
+
+  @IsNumber()
+  @Min(0)
+  @Max(65535)
+  MONGO_LOCAL_PORT: number;
+
+  @IsString()
+  MONGO_ADMIN_USER: string;
+
+  @IsString()
+  MONGO_ADMIN_PASSWORD: string;
+
+  @IsString()
+  MONGO_DB_NAME: string;
+
+  @IsString()
+  DATABASE_URL: string;
 }
 export class EnvironmentObject {
   serverPort: number;
   plannerApi: {
     url: string;
     key: string;
+  };
+  database: {
+    url: string;
   };
 }
 
@@ -34,5 +54,8 @@ export const envConfig = (): EnvironmentObject => ({
   plannerApi: {
     url: process.env.PLANNER_API_URL,
     key: process.env.PLANNER_API_KEY,
+  },
+  database: {
+    url: process.env.DATABASE_URL,
   },
 });
