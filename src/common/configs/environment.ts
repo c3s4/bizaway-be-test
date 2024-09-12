@@ -10,6 +10,23 @@ class EnvironmentData {
   PLANNER_API_URL: string;
   @IsString()
   PLANNER_API_KEY: string;
+
+  @IsNumber()
+  @Min(0)
+  @Max(65535)
+  MONGO_LOCAL_PORT: number;
+
+  @IsString()
+  MONGO_ADMIN_USER: string;
+
+  @IsString()
+  MONGO_ADMIN_PASSWORD: string;
+
+  @IsString()
+  MONGO_DB_NAME: string;
+
+  @IsString()
+  DATABASE_URL: string;
 }
 export class EnvironmentObject {
   serverPort: number;
