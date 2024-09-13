@@ -4,12 +4,13 @@ import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envConfig, validateEnv } from '../../../common/configs/environment';
-import { PlaceCode, SearchTripIntegrationResponseDto, SortBy } from '../dtos/search_trips.dto';
+import { SearchTripIntegrationResponseDto, SortBy } from '../dtos/search_trips.dto';
+import { PlaceCode } from '../../../common/dtos/trip.enum';
 
 const mockTripsList: SearchTripIntegrationResponseDto[] = [
   {
-    origin: 'AMS',
-    destination: 'FRA',
+    origin: PlaceCode.AMS,
+    destination: PlaceCode.FRA,
     cost: 3140,
     duration: 42,
     type: 'train',
@@ -17,8 +18,8 @@ const mockTripsList: SearchTripIntegrationResponseDto[] = [
     display_name: 'from AMS to FRA by train',
   },
   {
-    origin: 'AMS',
-    destination: 'FRA',
+    origin: PlaceCode.AMS,
+    destination: PlaceCode.FRA,
     cost: 5418,
     duration: 40,
     type: 'car',
@@ -26,8 +27,8 @@ const mockTripsList: SearchTripIntegrationResponseDto[] = [
     display_name: 'from AMS to FRA by car',
   },
   {
-    origin: 'AMS',
-    destination: 'FRA',
+    origin: PlaceCode.AMS,
+    destination: PlaceCode.FRA,
     cost: 2700,
     duration: 6,
     type: 'train',
@@ -35,8 +36,8 @@ const mockTripsList: SearchTripIntegrationResponseDto[] = [
     display_name: 'from AMS to FRA by train',
   },
   {
-    origin: 'AMS',
-    destination: 'FRA',
+    origin: PlaceCode.AMS,
+    destination: PlaceCode.FRA,
     cost: 7399,
     duration: 47,
     type: 'flight',

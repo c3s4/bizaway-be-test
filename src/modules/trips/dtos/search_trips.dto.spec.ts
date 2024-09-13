@@ -1,6 +1,7 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { PlaceCode, SearchTripsRequestDto, SortBy } from './search_trips.dto';
+import { SearchTripsRequestDto, SortBy } from './search_trips.dto';
+import { PlaceCode } from '../../../common/dtos/trip.enum';
 
 describe('Search trips DTO', () => {
   describe('search trip request', () => {

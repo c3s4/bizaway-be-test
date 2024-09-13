@@ -1,27 +1,28 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TripsController } from './trips.controller';
 import { TripsService } from './service/trips.service';
-import { PlaceCode, SearchTripsRequestDto, SortBy } from './dtos/search_trips.dto';
+import { SearchTripResponseDto, SearchTripsRequestDto, SortBy } from './dtos/search_trips.dto';
 import { BadRequestException } from '@nestjs/common';
+import { PlaceCode } from '../../common/dtos/trip.enum';
 
-const trips = [
+const trips: SearchTripResponseDto[] = [
   {
-    origin: 'BCN',
-    destination: 'LAX',
+    origin: PlaceCode.BCN,
+    destination: PlaceCode.LAX,
     cost: 159,
     duration: 39,
     type: 'train',
     remoteId: 'a5b0e087-ad0a-41e7-94c4-00634a222823',
-    display_name: 'from BCN to LAX by train',
+    displayName: 'from BCN to LAX by train',
   },
   {
-    origin: 'BCN',
-    destination: 'LAX',
+    origin: PlaceCode.BCN,
+    destination: PlaceCode.LAX,
     cost: 282,
     duration: 38,
     type: 'car',
     remoteId: 'ca89c6d5-445c-4f7f-aa4b-d4860bcf1d31',
-    display_name: 'from BCN to LAX by car',
+    displayName: 'from BCN to LAX by car',
   },
 ];
 
