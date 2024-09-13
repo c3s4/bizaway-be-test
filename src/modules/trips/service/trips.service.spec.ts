@@ -49,16 +49,51 @@ const mockTripsList: SearchTripIntegrationResponseDto[] = [
   },
 ];
 
-const mockSavedTrip: Trip = new Trip({
-  origin: PlaceCode.JFK,
-  destination: PlaceCode.LAX,
-  cost: 100,
-  duration: 10,
-  type: TripType.FLIGHT,
-  remoteId: '1',
-  displayName: 'Trip 1',
-});
-mockSavedTrip.id = 'fake id';
+const mockSavedTrips: Trip[] = [
+  new Trip({
+    origin: PlaceCode.JFK,
+    destination: PlaceCode.LAX,
+    cost: 100,
+    duration: 10,
+    type: TripType.FLIGHT,
+    remoteId: '1',
+    displayName: 'Trip 1',
+  }),
+  new Trip({
+    origin: PlaceCode.CAN,
+    destination: PlaceCode.ARN,
+    cost: 8700,
+    duration: 230,
+    type: TripType.TRAIN,
+    remoteId: '123',
+    displayName: 'Trip 2',
+  }),
+  new Trip({
+    origin: PlaceCode.BCN,
+    destination: PlaceCode.LAX,
+    cost: 200,
+    duration: 20,
+    type: TripType.TRAIN,
+    remoteId: '3',
+    displayName: 'Trip 3',
+  }),
+  new Trip({
+    origin: PlaceCode.AMS,
+    destination: PlaceCode.BKK,
+    cost: 1000,
+    duration: 100,
+    type: TripType.CAR,
+    remoteId: '2',
+    displayName: 'Trip 4',
+  }),
+];
+
+mockSavedTrips[0].id = 'fake id 1';
+mockSavedTrips[1].id = 'fake id 2';
+mockSavedTrips[2].id = 'fake id 3';
+mockSavedTrips[3].id = 'fake id 4';
+
+// mockSavedTrip.id = 'fake id';
 
 describe('TripsService', () => {
   let tripsService: TripsService;
@@ -87,7 +122,7 @@ describe('TripsService', () => {
         {
           provide: TripsRepository,
           useFactory: () => ({
-            createTrip: jest.fn().mockResolvedValue(mockSavedTrip),
+            createTrip: jest.fn().mockResolvedValue(mockSavedTrips[0]),
           }),
         },
       ],
@@ -297,14 +332,14 @@ describe('TripsService', () => {
       };
       const savedTrip = await tripsService.saveTrip(newTrip);
       expect(savedTrip).toEqual({
-        id: mockSavedTrip.id,
-        origin: PlaceCode.JFK,
-        destination: PlaceCode.LAX,
-        cost: 100,
-        duration: 10,
-        type: TripType.FLIGHT,
-        remoteId: '1',
-        displayName: 'Trip 1',
+        id: mockSavedTrips[0].id,
+        origin: mockSavedTrips[0].origin,
+        destination: mockSavedTrips[0].destination,
+        cost: mockSavedTrips[0].cost,
+        duration: mockSavedTrips[0].duration,
+        type: mockSavedTrips[0].type,
+        remoteId: mockSavedTrips[0].remoteId,
+        displayName: mockSavedTrips[0].displayName,
       });
 
       expect(savedTrip instanceof SaveTripResponseDto).toBeTruthy();
