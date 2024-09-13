@@ -8,6 +8,11 @@ export class TripsController {
   private logger = new Logger(TripsController.name);
   constructor(private tripService: TripsService) {}
 
+  @Post('/')
+  async saveTrip(@Body() saveTripRequest: SaveTripRequestDto): Promise<SaveTripResponseDto> {
+    return await this.tripService.saveTrip(saveTripRequest);
+  }
+
   @Get('/search')
   async searchTrips(@Query() searchParams: SearchTripsRequestDto): Promise<SearchTripsListResponseDto> {
     const foundTrips = await this.tripService.searchTripsFromIntegration(searchParams);
@@ -15,10 +20,5 @@ export class TripsController {
       throw new BadRequestException('Page number is too high');
     }
     return foundTrips;
-  }
-
-  @Post('/')
-  async saveTrip(@Body() saveTripRequest: SaveTripRequestDto): Promise<SaveTripResponseDto> {
-    return await this.tripService.saveTrip(saveTripRequest);
   }
 }
