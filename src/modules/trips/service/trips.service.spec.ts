@@ -5,7 +5,10 @@ import { of } from 'rxjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envConfig, validateEnv } from '../../../common/configs/environment';
 import { SearchTripIntegrationResponseDto, SortBy } from '../dtos/search_trips.dto';
-import { PlaceCode } from '../../../common/dtos/trip.enum';
+import { PlaceCode, TripType } from '../../../common/dtos/trip.enum';
+import { TripsRepository } from '../persistance/repository/trips.repository';
+import { Trip } from '../persistance/entites/trip.entity';
+import { SaveTripResponseDto } from '../dtos/save_trip.dto';
 
 const mockTripsList: SearchTripIntegrationResponseDto[] = [
   {
@@ -45,10 +48,23 @@ const mockTripsList: SearchTripIntegrationResponseDto[] = [
     display_name: 'from AMS to FRA by flight',
   },
 ];
+
+const mockSavedTrip: Trip = new Trip({
+  origin: PlaceCode.JFK,
+  destination: PlaceCode.LAX,
+  cost: 100,
+  duration: 10,
+  type: TripType.FLIGHT,
+  remoteId: '1',
+  displayName: 'Trip 1',
+});
+mockSavedTrip.id = 'fake id';
+
 describe('TripsService', () => {
   let tripsService: TripsService;
   let httpService: HttpService;
   let configService: ConfigService;
+  let tripsRepository: TripsRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -68,12 +84,19 @@ describe('TripsService', () => {
             get: jest.fn(() => of({ data: mockTripsList })),
           },
         },
+        {
+          provide: TripsRepository,
+          useFactory: () => ({
+            createTrip: jest.fn().mockResolvedValue(mockSavedTrip),
+          }),
+        },
       ],
     }).compile();
 
     tripsService = module.get<TripsService>(TripsService);
     httpService = module.get<HttpService>(HttpService);
     configService = module.get<ConfigService>(ConfigService);
+    tripsRepository = module.get<TripsRepository>(TripsRepository);
   });
 
   it('should be defined', () => {
@@ -258,6 +281,34 @@ describe('TripsService', () => {
       expect(tripsLits.totalPages).toEqual(2);
       expect(tripsLits.totalItems).toEqual(mockTripsList.length);
       expect(tripsLits.itemsPerPage).toEqual(2);
+    });
+  });
+
+  describe('saveTrip', () => {
+    it('should save a trip', async () => {
+      const newTrip = {
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      };
+      const savedTrip = await tripsService.saveTrip(newTrip);
+      expect(savedTrip).toEqual({
+        id: mockSavedTrip.id,
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
+
+      expect(savedTrip instanceof SaveTripResponseDto).toBeTruthy();
+      expect(tripsRepository.createTrip).toHaveBeenCalledWith(newTrip);
     });
   });
 });
