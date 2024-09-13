@@ -8,6 +8,9 @@ import { TripsModule } from '../../../src/modules/trips/trips.module';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { dbConfig } from '../../../src/common/configs/mikro_orm.config';
 import { MikroORM } from '@mikro-orm/mongodb';
+import { Trip } from '../../../src/modules/trips/persistance/entites/trip.entity';
+import { PlaceCode, TripType } from '../../../src/common/dtos/trip.enum';
+import { PAGINATION } from '../../../src/common/configs/constants';
 
 describe('[Feature] Trips - /trips', () => {
   let app: INestApplication;
@@ -31,7 +34,7 @@ describe('[Feature] Trips - /trips', () => {
             }),
           ],
           inject: [ConfigService],
-          useFactory: (configService: ConfigService) => dbConfig(configService),
+          useFactory: (configService: ConfigService) => dbConfig(configService, true),
         }),
         TripsModule,
       ],
@@ -156,6 +159,96 @@ describe('[Feature] Trips - /trips', () => {
         remote_id: response.body.remote_id,
         display_name: response.body.display_name,
       });
+    });
+  });
+
+  describe.only('GET /', () => {
+    it('should fail because of not valid data', async () => {
+      await request(app.getHttpServer()).get('/api/trips?page=0').expect(400);
+      await request(app.getHttpServer()).get('/api/trips?page=-1').expect(400);
+      await request(app.getHttpServer()).get('/api/trips?items_per_page=0').expect(400);
+      await request(app.getHttpServer()).get('/api/trips?items_per_page=-1').expect(400);
+      await request(app.getHttpServer()).get('/api/trips?page=&items_per_page=').expect(400);
+    });
+
+    it('should return a list of trips', async () => {
+      const trip1 = new Trip({
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
+
+      const trip2 = new Trip({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.BKK,
+        cost: 1000,
+        duration: 100,
+        type: TripType.CAR,
+        remoteId: '2',
+        displayName: 'Trip 2',
+      });
+
+      const trip3 = new Trip({
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+        cost: 200,
+        duration: 20,
+        type: TripType.TRAIN,
+        remoteId: '3',
+        displayName: 'Trip 3',
+      });
+
+      await orm.em.persistAndFlush([trip1, trip2, trip3]);
+
+      let response = await request(app.getHttpServer()).get('/api/trips/');
+      expect(response.status).toBe(200);
+      expect(response.body.items.length).toBe(3);
+      expect(response.body.items[0]).toEqual({
+        id: trip1.id,
+        origin: trip1.origin,
+        destination: trip1.destination,
+        cost: trip1.cost,
+        duration: trip1.duration,
+        type: trip1.type,
+        remote_id: trip1.remoteId,
+        display_name: trip1.displayName,
+      });
+      expect(response.body.current_page).toBe(PAGINATION.DEFAULT_PAGE);
+      expect(response.body.total_pages).toBe(1);
+      expect(response.body.total_items).toBe(3);
+      expect(response.body.items_per_page).toBe(PAGINATION.DEFAULT_ITEMS_PER_PAGE);
+
+      response = await request(app.getHttpServer()).get('/api/trips?page=2&items_per_page=2');
+      expect(response.status).toBe(200);
+      expect(response.body.items.length).toBe(1);
+      expect(response.body.items[0]).toEqual({
+        id: trip3.id,
+        origin: trip3.origin,
+        destination: trip3.destination,
+        cost: trip3.cost,
+        duration: trip3.duration,
+        type: trip3.type,
+        remote_id: trip3.remoteId,
+        display_name: trip3.displayName,
+      });
+      expect(response.body.current_page).toBe(2);
+      expect(response.body.total_pages).toBe(2);
+      expect(response.body.total_items).toBe(3);
+      expect(response.body.items_per_page).toBe(2);
+    });
+
+    it('should return an empty array of trips', async () => {
+      const response = await request(app.getHttpServer()).get('/api/trips/');
+      expect(response.status).toBe(200);
+      expect(response.body.items.length).toBe(0);
+      expect(response.body.current_page).toBe(PAGINATION.DEFAULT_PAGE);
+      expect(response.body.total_pages).toBe(0);
+      expect(response.body.total_items).toBe(0);
+      expect(response.body.items_per_page).toBe(PAGINATION.DEFAULT_ITEMS_PER_PAGE);
     });
   });
 
