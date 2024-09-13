@@ -9,6 +9,8 @@ import { PlaceCode, TripType } from '../../../common/dtos/trip.enum';
 import { TripsRepository } from '../persistance/repository/trips.repository';
 import { Trip } from '../persistance/entites/trip.entity';
 import { SaveTripResponseDto } from '../dtos/save_trip.dto';
+import { PAGINATION } from '../../../common/configs/constants';
+import { GetTripsListResponseDto } from '../dtos/get_trips.dto';
 
 const mockTripsList: SearchTripIntegrationResponseDto[] = [
   {
@@ -123,6 +125,7 @@ describe('TripsService', () => {
           provide: TripsRepository,
           useFactory: () => ({
             createTrip: jest.fn().mockResolvedValue(mockSavedTrips[0]),
+            getTrips: jest.fn().mockResolvedValue({ trips: mockSavedTrips, totalTrips: mockSavedTrips.length }),
           }),
         },
       ],
@@ -344,6 +347,69 @@ describe('TripsService', () => {
 
       expect(savedTrip instanceof SaveTripResponseDto).toBeTruthy();
       expect(tripsRepository.createTrip).toHaveBeenCalledWith(newTrip);
+    });
+  });
+
+  describe('getTrips', () => {
+    it('should get trips', async () => {
+      const trips = await tripsService.getTrips();
+      expect(trips.items).toHaveLength(mockSavedTrips.length);
+      mockSavedTrips.forEach((trip, index) => {
+        expect(trips.items[index]).toEqual({
+          id: trip.id,
+          origin: trip.origin,
+          destination: trip.destination,
+          cost: trip.cost,
+          duration: trip.duration,
+          type: trip.type,
+          remoteId: trip.remoteId,
+          displayName: trip.displayName,
+        });
+      });
+
+      expect(trips.currentPage).toEqual(PAGINATION.DEFAULT_PAGE);
+      expect(trips.totalPages).toEqual(1);
+      expect(trips.totalItems).toEqual(mockSavedTrips.length);
+      expect(trips.itemsPerPage).toEqual(PAGINATION.DEFAULT_ITEMS_PER_PAGE);
+
+      expect(tripsRepository.getTrips).toHaveBeenCalledWith(PAGINATION.DEFAULT_PAGE, PAGINATION.DEFAULT_ITEMS_PER_PAGE);
+      expect(trips instanceof GetTripsListResponseDto).toBeTruthy();
+    });
+
+    it('should get paginated trips', async () => {
+      tripsRepository.getTrips = jest
+        .fn()
+        .mockResolvedValue({ trips: mockSavedTrips.slice(2), totalTrips: mockSavedTrips.length });
+      const trips = await tripsService.getTrips({ page: 2, itemsPerPage: 2 });
+
+      expect(tripsRepository.getTrips).toHaveBeenCalledWith(2, 2);
+      expect(trips.items).toHaveLength(2);
+      expect(trips.currentPage).toEqual(2);
+      expect(trips.totalPages).toEqual(2);
+      expect(trips.totalItems).toEqual(mockSavedTrips.length);
+      expect(trips.itemsPerPage).toEqual(2);
+
+      expect(trips.items[0]).toEqual({
+        id: mockSavedTrips[2].id,
+        origin: mockSavedTrips[2].origin,
+        destination: mockSavedTrips[2].destination,
+        cost: mockSavedTrips[2].cost,
+        duration: mockSavedTrips[2].duration,
+        type: mockSavedTrips[2].type,
+        remoteId: mockSavedTrips[2].remoteId,
+        displayName: mockSavedTrips[2].displayName,
+      });
+    });
+
+    it('should return empty list if no trips are found', async () => {
+      tripsRepository.getTrips = jest.fn().mockResolvedValue({ trips: [], totalTrips: 0 });
+      const trips = await tripsService.getTrips();
+
+      expect(trips.items).toHaveLength(0);
+      expect(trips.totalItems).toEqual(0);
+      expect(trips.currentPage).toEqual(PAGINATION.DEFAULT_PAGE);
+      expect(trips.totalPages).toEqual(0);
+      expect(trips.itemsPerPage).toEqual(PAGINATION.DEFAULT_ITEMS_PER_PAGE);
     });
   });
 });
