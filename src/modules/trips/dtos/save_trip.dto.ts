@@ -23,7 +23,7 @@ export class SaveTripResponseDto {
   destination: PlaceCode;
   cost: number;
   duration: number;
-  type: string;
+  type: TripType;
   @Expose({ name: 'remote_id' })
   remoteId: string;
   @Expose({ name: 'display_name' })
