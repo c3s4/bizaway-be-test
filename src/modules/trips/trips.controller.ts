@@ -1,14 +1,17 @@
 import {
   BadRequestException,
+  Body,
   ClassSerializerInterceptor,
   Controller,
   Get,
   Logger,
+  Post,
   Query,
   UseInterceptors,
 } from '@nestjs/common';
 import { SearchTripsListResponseDto, SearchTripsRequestDto } from './dtos/search_trips.dto';
 import { TripsService } from './service/trips.service';
+import { SaveTripRequestDto, SaveTripResponseDto } from './dtos/save_trip.dto';
 
 @Controller('trips')
 export class TripsController {
@@ -23,5 +26,10 @@ export class TripsController {
       throw new BadRequestException('Page number is too high');
     }
     return foundTrips;
+  }
+
+  @Post('/')
+  async saveTrip(@Body() saveTripRequest: SaveTripRequestDto): Promise<SaveTripResponseDto> {
+    return await this.tripService.saveTrip(saveTripRequest);
   }
 }

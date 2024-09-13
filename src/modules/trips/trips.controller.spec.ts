@@ -3,7 +3,8 @@ import { TripsController } from './trips.controller';
 import { TripsService } from './service/trips.service';
 import { SearchTripResponseDto, SearchTripsRequestDto, SortBy } from './dtos/search_trips.dto';
 import { BadRequestException } from '@nestjs/common';
-import { PlaceCode } from '../../common/dtos/trip.enum';
+import { PlaceCode, TripType } from '../../common/dtos/trip.enum';
+import { SaveTripResponseDto } from './dtos/save_trip.dto';
 
 const trips: SearchTripResponseDto[] = [
   {
@@ -26,7 +27,18 @@ const trips: SearchTripResponseDto[] = [
   },
 ];
 
-const mockTripsService = () => ({
+const mockSavedTrip: SaveTripResponseDto = new SaveTripResponseDto({
+  id: 'fake id',
+  origin: PlaceCode.JFK,
+  destination: PlaceCode.LAX,
+  cost: 100,
+  duration: 10,
+  type: TripType.FLIGHT,
+  remoteId: '1',
+  displayName: 'Trip 1',
+});
+
+const mockTripsService = (): Partial<TripsService> => ({
   searchTripsFromIntegration: jest.fn().mockResolvedValue({
     items: trips,
     totalItems: 3,
@@ -34,6 +46,8 @@ const mockTripsService = () => ({
     totalPages: 2,
     itemsPerPage: 2,
   }),
+
+  saveTrip: jest.fn().mockResolvedValue(mockSavedTrip),
 });
 describe('TripsController', () => {
   let controller: TripsController;
@@ -121,6 +135,24 @@ describe('TripsController', () => {
       const foundTrips = controller.searchTrips(searchParams);
       expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
       await expect(foundTrips).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('saveTrip', () => {
+    it('should save a trip', async () => {
+      const saveTripRequest = {
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      };
+
+      const savedTrip = await controller.saveTrip(saveTripRequest);
+      expect(tripService.saveTrip).toHaveBeenCalledWith(saveTripRequest);
+      expect(savedTrip).toEqual(mockSavedTrip);
     });
   });
 });
