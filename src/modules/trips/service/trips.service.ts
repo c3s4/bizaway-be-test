@@ -10,6 +10,8 @@ import { HttpService } from '@nestjs/axios';
 import { catchError, lastValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 import { PAGINATION } from '../../../common/configs/constants';
+import { SaveTripRequestDto, SaveTripResponseDto } from '../dtos/save_trip.dto';
+import { TripsRepository } from '../persistance/repository/trips.repository';
 
 @Injectable()
 export class TripsService {
@@ -17,6 +19,7 @@ export class TripsService {
   constructor(
     private readonly httpService: HttpService,
     private configService: ConfigService,
+    private tripsRepository: TripsRepository,
   ) {}
 
   async searchTripsFromIntegration(searchParams: SearchTripsRequestDto): Promise<SearchTripsListResponseDto> {
@@ -82,5 +85,10 @@ export class TripsService {
       totalItems: remappedResponse.length,
       itemsPerPage: itemsPerPage,
     });
+  }
+
+  async saveTrip(trip: SaveTripRequestDto): Promise<SaveTripResponseDto> {
+    const savedTrip = await this.tripsRepository.createTrip(trip);
+    return new SaveTripResponseDto(savedTrip);
   }
 }

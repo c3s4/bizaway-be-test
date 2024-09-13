@@ -4,12 +4,16 @@ import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envConfig, validateEnv } from '../../../common/configs/environment';
-import { PlaceCode, SearchTripIntegrationResponseDto, SortBy } from '../dtos/search_trips.dto';
+import { SearchTripIntegrationResponseDto, SortBy } from '../dtos/search_trips.dto';
+import { PlaceCode, TripType } from '../../../common/dtos/trip.enum';
+import { TripsRepository } from '../persistance/repository/trips.repository';
+import { Trip } from '../persistance/entites/trip.entity';
+import { SaveTripResponseDto } from '../dtos/save_trip.dto';
 
 const mockTripsList: SearchTripIntegrationResponseDto[] = [
   {
-    origin: 'AMS',
-    destination: 'FRA',
+    origin: PlaceCode.AMS,
+    destination: PlaceCode.FRA,
     cost: 3140,
     duration: 42,
     type: 'train',
@@ -17,8 +21,8 @@ const mockTripsList: SearchTripIntegrationResponseDto[] = [
     display_name: 'from AMS to FRA by train',
   },
   {
-    origin: 'AMS',
-    destination: 'FRA',
+    origin: PlaceCode.AMS,
+    destination: PlaceCode.FRA,
     cost: 5418,
     duration: 40,
     type: 'car',
@@ -26,8 +30,8 @@ const mockTripsList: SearchTripIntegrationResponseDto[] = [
     display_name: 'from AMS to FRA by car',
   },
   {
-    origin: 'AMS',
-    destination: 'FRA',
+    origin: PlaceCode.AMS,
+    destination: PlaceCode.FRA,
     cost: 2700,
     duration: 6,
     type: 'train',
@@ -35,8 +39,8 @@ const mockTripsList: SearchTripIntegrationResponseDto[] = [
     display_name: 'from AMS to FRA by train',
   },
   {
-    origin: 'AMS',
-    destination: 'FRA',
+    origin: PlaceCode.AMS,
+    destination: PlaceCode.FRA,
     cost: 7399,
     duration: 47,
     type: 'flight',
@@ -44,10 +48,23 @@ const mockTripsList: SearchTripIntegrationResponseDto[] = [
     display_name: 'from AMS to FRA by flight',
   },
 ];
+
+const mockSavedTrip: Trip = new Trip({
+  origin: PlaceCode.JFK,
+  destination: PlaceCode.LAX,
+  cost: 100,
+  duration: 10,
+  type: TripType.FLIGHT,
+  remoteId: '1',
+  displayName: 'Trip 1',
+});
+mockSavedTrip.id = 'fake id';
+
 describe('TripsService', () => {
   let tripsService: TripsService;
   let httpService: HttpService;
   let configService: ConfigService;
+  let tripsRepository: TripsRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -67,194 +84,231 @@ describe('TripsService', () => {
             get: jest.fn(() => of({ data: mockTripsList })),
           },
         },
+        {
+          provide: TripsRepository,
+          useFactory: () => ({
+            createTrip: jest.fn().mockResolvedValue(mockSavedTrip),
+          }),
+        },
       ],
     }).compile();
 
     tripsService = module.get<TripsService>(TripsService);
     httpService = module.get<HttpService>(HttpService);
     configService = module.get<ConfigService>(ConfigService);
+    tripsRepository = module.get<TripsRepository>(TripsRepository);
   });
 
   it('should be defined', () => {
     expect(tripsService).toBeDefined();
   });
 
-  it('should call external API as expected', async () => {
-    await tripsService.searchTripsFromIntegration({ origin: PlaceCode.AMS, destination: PlaceCode.FRA });
-    expect(configService.get('plannerApi.url')).toBeDefined();
-    expect(configService.get('plannerApi.key')).toBeDefined();
-    expect(httpService.get).toHaveBeenCalledWith(
-      `${configService.get('plannerApi.url')}?origin=${PlaceCode.AMS}&destination=${PlaceCode.FRA}`,
-      {
-        headers: {
-          'x-api-key': configService.get('plannerApi.key'),
+  describe('searchTripsFromIntegration', () => {
+    it('should call external API as expected', async () => {
+      await tripsService.searchTripsFromIntegration({ origin: PlaceCode.AMS, destination: PlaceCode.FRA });
+      expect(configService.get('plannerApi.url')).toBeDefined();
+      expect(configService.get('plannerApi.key')).toBeDefined();
+      expect(httpService.get).toHaveBeenCalledWith(
+        `${configService.get('plannerApi.url')}?origin=${PlaceCode.AMS}&destination=${PlaceCode.FRA}`,
+        {
+          headers: {
+            'x-api-key': configService.get('plannerApi.key'),
+          },
         },
-      },
-    );
+      );
 
-    await tripsService.searchTripsFromIntegration({ origin: PlaceCode.BCN, destination: PlaceCode.EWR });
-    expect(httpService.get).toHaveBeenCalledWith(
-      `${configService.get('plannerApi.url')}?origin=${PlaceCode.BCN}&destination=${PlaceCode.EWR}`,
-      {
-        headers: {
-          'x-api-key': configService.get('plannerApi.key'),
+      await tripsService.searchTripsFromIntegration({ origin: PlaceCode.BCN, destination: PlaceCode.EWR });
+      expect(httpService.get).toHaveBeenCalledWith(
+        `${configService.get('plannerApi.url')}?origin=${PlaceCode.BCN}&destination=${PlaceCode.EWR}`,
+        {
+          headers: {
+            'x-api-key': configService.get('plannerApi.key'),
+          },
         },
-      },
-    );
-  });
-
-  it('should return unsorted list of trips', async () => {
-    const tripsLits = await tripsService.searchTripsFromIntegration({
-      origin: PlaceCode.AMS,
-      destination: PlaceCode.FRA,
+      );
     });
-    mockTripsList.forEach((trip, index) => {
-      expect(tripsLits.items[index]).toEqual({
-        origin: trip.origin,
-        destination: trip.destination,
-        cost: trip.cost,
-        duration: trip.duration,
-        type: trip.type,
-        remoteId: trip.id,
-        displayName: trip.display_name,
+
+    it('should return unsorted list of trips', async () => {
+      const tripsLits = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+      });
+      mockTripsList.forEach((trip, index) => {
+        expect(tripsLits.items[index]).toEqual({
+          origin: trip.origin,
+          destination: trip.destination,
+          cost: trip.cost,
+          duration: trip.duration,
+          type: trip.type,
+          remoteId: trip.id,
+          displayName: trip.display_name,
+        });
       });
     });
+
+    it('should return list of trips sorted by cheapest', async () => {
+      const tripsLits = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        sortBy: SortBy.CHEAPEST,
+      });
+      expect(tripsLits.items).toHaveLength(mockTripsList.length);
+      expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
+      expect(tripsLits.items[0].cost).toEqual(2700);
+      expect(tripsLits.items[1].remoteId).toEqual('a387d04a-5619-444a-b4bc-9a817a2d5370');
+      expect(tripsLits.items[1].cost).toEqual(3140);
+      expect(tripsLits.items[2].remoteId).toEqual('52aaf4fb-2f17-4e0b-b4c9-de195b1bb425');
+      expect(tripsLits.items[2].cost).toEqual(5418);
+      expect(tripsLits.items[3].remoteId).toEqual('8e3204f8-7ffc-43b0-ab33-1e57badd9399');
+      expect(tripsLits.items[3].cost).toEqual(7399);
+    });
+
+    it('should return list of trips sorted by fastest', async () => {
+      const tripsLits = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        sortBy: SortBy.FASTEST,
+      });
+      expect(tripsLits.items).toHaveLength(mockTripsList.length);
+      expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
+      expect(tripsLits.items[0].duration).toEqual(6);
+      expect(tripsLits.items[1].remoteId).toEqual('52aaf4fb-2f17-4e0b-b4c9-de195b1bb425');
+      expect(tripsLits.items[1].duration).toEqual(40);
+      expect(tripsLits.items[2].remoteId).toEqual('a387d04a-5619-444a-b4bc-9a817a2d5370');
+      expect(tripsLits.items[2].duration).toEqual(42);
+      expect(tripsLits.items[3].remoteId).toEqual('8e3204f8-7ffc-43b0-ab33-1e57badd9399');
+      expect(tripsLits.items[3].duration).toEqual(47);
+    });
+
+    it('should return paginated results', async () => {
+      let tripsLits = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        page: 1,
+        itemsPerPage: 2,
+      });
+      expect(tripsLits.items).toHaveLength(2);
+      expect(tripsLits.currentPage).toEqual(1);
+      expect(tripsLits.totalPages).toEqual(2);
+      expect(tripsLits.totalItems).toEqual(mockTripsList.length);
+      expect(tripsLits.itemsPerPage).toEqual(2);
+
+      expect(tripsLits.items[0]).toEqual({
+        origin: mockTripsList[0].origin,
+        destination: mockTripsList[0].destination,
+        cost: mockTripsList[0].cost,
+        duration: mockTripsList[0].duration,
+        type: mockTripsList[0].type,
+        remoteId: mockTripsList[0].id,
+        displayName: mockTripsList[0].display_name,
+      });
+
+      tripsLits = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        page: 2,
+        itemsPerPage: 2,
+      });
+
+      expect(tripsLits.currentPage).toEqual(2);
+      expect(tripsLits.items[0]).toEqual({
+        origin: mockTripsList[2].origin,
+        destination: mockTripsList[2].destination,
+        cost: mockTripsList[2].cost,
+        duration: mockTripsList[2].duration,
+        type: mockTripsList[2].type,
+        remoteId: mockTripsList[2].id,
+        displayName: mockTripsList[2].display_name,
+      });
+
+      tripsLits = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        page: 2,
+        itemsPerPage: 1,
+      });
+
+      expect(tripsLits.items).toHaveLength(1);
+      expect(tripsLits.currentPage).toEqual(2);
+      expect(tripsLits.totalPages).toEqual(4);
+      expect(tripsLits.totalItems).toEqual(mockTripsList.length);
+      expect(tripsLits.itemsPerPage).toEqual(1);
+      expect(tripsLits.items[0]).toEqual({
+        origin: mockTripsList[1].origin,
+        destination: mockTripsList[1].destination,
+        cost: mockTripsList[1].cost,
+        duration: mockTripsList[1].duration,
+        type: mockTripsList[1].type,
+        remoteId: mockTripsList[1].id,
+        displayName: mockTripsList[1].display_name,
+      });
+    });
+
+    it('should return sorted paginated results', async () => {
+      let tripsLits = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        sortBy: SortBy.CHEAPEST,
+        page: 2,
+        itemsPerPage: 2,
+      });
+
+      expect(tripsLits.items).toHaveLength(2);
+      expect(tripsLits.currentPage).toEqual(2);
+      expect(tripsLits.totalPages).toEqual(2);
+      expect(tripsLits.totalItems).toEqual(mockTripsList.length);
+      expect(tripsLits.itemsPerPage).toEqual(2);
+      expect(tripsLits.items[0]).toEqual({
+        origin: mockTripsList[1].origin,
+        destination: mockTripsList[1].destination,
+        cost: mockTripsList[1].cost,
+        duration: mockTripsList[1].duration,
+        type: mockTripsList[1].type,
+        remoteId: mockTripsList[1].id,
+        displayName: mockTripsList[1].display_name,
+      });
+
+      tripsLits = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        sortBy: SortBy.CHEAPEST,
+        page: 20,
+        itemsPerPage: 2,
+      });
+
+      expect(tripsLits.items).toHaveLength(0);
+      expect(tripsLits.currentPage).toEqual(20);
+      expect(tripsLits.totalPages).toEqual(2);
+      expect(tripsLits.totalItems).toEqual(mockTripsList.length);
+      expect(tripsLits.itemsPerPage).toEqual(2);
+    });
   });
 
-  it('should return list of trips sorted by cheapest', async () => {
-    const tripsLits = await tripsService.searchTripsFromIntegration({
-      origin: PlaceCode.AMS,
-      destination: PlaceCode.FRA,
-      sortBy: SortBy.CHEAPEST,
-    });
-    expect(tripsLits.items).toHaveLength(mockTripsList.length);
-    expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
-    expect(tripsLits.items[0].cost).toEqual(2700);
-    expect(tripsLits.items[1].remoteId).toEqual('a387d04a-5619-444a-b4bc-9a817a2d5370');
-    expect(tripsLits.items[1].cost).toEqual(3140);
-    expect(tripsLits.items[2].remoteId).toEqual('52aaf4fb-2f17-4e0b-b4c9-de195b1bb425');
-    expect(tripsLits.items[2].cost).toEqual(5418);
-    expect(tripsLits.items[3].remoteId).toEqual('8e3204f8-7ffc-43b0-ab33-1e57badd9399');
-    expect(tripsLits.items[3].cost).toEqual(7399);
-  });
+  describe('saveTrip', () => {
+    it('should save a trip', async () => {
+      const newTrip = {
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      };
+      const savedTrip = await tripsService.saveTrip(newTrip);
+      expect(savedTrip).toEqual({
+        id: mockSavedTrip.id,
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
 
-  it('should return list of trips sorted by fastest', async () => {
-    const tripsLits = await tripsService.searchTripsFromIntegration({
-      origin: PlaceCode.AMS,
-      destination: PlaceCode.FRA,
-      sortBy: SortBy.FASTEST,
+      expect(savedTrip instanceof SaveTripResponseDto).toBeTruthy();
+      expect(tripsRepository.createTrip).toHaveBeenCalledWith(newTrip);
     });
-    expect(tripsLits.items).toHaveLength(mockTripsList.length);
-    expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
-    expect(tripsLits.items[0].duration).toEqual(6);
-    expect(tripsLits.items[1].remoteId).toEqual('52aaf4fb-2f17-4e0b-b4c9-de195b1bb425');
-    expect(tripsLits.items[1].duration).toEqual(40);
-    expect(tripsLits.items[2].remoteId).toEqual('a387d04a-5619-444a-b4bc-9a817a2d5370');
-    expect(tripsLits.items[2].duration).toEqual(42);
-    expect(tripsLits.items[3].remoteId).toEqual('8e3204f8-7ffc-43b0-ab33-1e57badd9399');
-    expect(tripsLits.items[3].duration).toEqual(47);
-  });
-
-  it('should return paginated results', async () => {
-    let tripsLits = await tripsService.searchTripsFromIntegration({
-      origin: PlaceCode.AMS,
-      destination: PlaceCode.FRA,
-      page: 1,
-      itemsPerPage: 2,
-    });
-    expect(tripsLits.items).toHaveLength(2);
-    expect(tripsLits.currentPage).toEqual(1);
-    expect(tripsLits.totalPages).toEqual(2);
-    expect(tripsLits.totalItems).toEqual(mockTripsList.length);
-    expect(tripsLits.itemsPerPage).toEqual(2);
-
-    expect(tripsLits.items[0]).toEqual({
-      origin: mockTripsList[0].origin,
-      destination: mockTripsList[0].destination,
-      cost: mockTripsList[0].cost,
-      duration: mockTripsList[0].duration,
-      type: mockTripsList[0].type,
-      remoteId: mockTripsList[0].id,
-      displayName: mockTripsList[0].display_name,
-    });
-
-    tripsLits = await tripsService.searchTripsFromIntegration({
-      origin: PlaceCode.AMS,
-      destination: PlaceCode.FRA,
-      page: 2,
-      itemsPerPage: 2,
-    });
-
-    expect(tripsLits.currentPage).toEqual(2);
-    expect(tripsLits.items[0]).toEqual({
-      origin: mockTripsList[2].origin,
-      destination: mockTripsList[2].destination,
-      cost: mockTripsList[2].cost,
-      duration: mockTripsList[2].duration,
-      type: mockTripsList[2].type,
-      remoteId: mockTripsList[2].id,
-      displayName: mockTripsList[2].display_name,
-    });
-
-    tripsLits = await tripsService.searchTripsFromIntegration({
-      origin: PlaceCode.AMS,
-      destination: PlaceCode.FRA,
-      page: 2,
-      itemsPerPage: 1,
-    });
-
-    expect(tripsLits.items).toHaveLength(1);
-    expect(tripsLits.currentPage).toEqual(2);
-    expect(tripsLits.totalPages).toEqual(4);
-    expect(tripsLits.totalItems).toEqual(mockTripsList.length);
-    expect(tripsLits.itemsPerPage).toEqual(1);
-    expect(tripsLits.items[0]).toEqual({
-      origin: mockTripsList[1].origin,
-      destination: mockTripsList[1].destination,
-      cost: mockTripsList[1].cost,
-      duration: mockTripsList[1].duration,
-      type: mockTripsList[1].type,
-      remoteId: mockTripsList[1].id,
-      displayName: mockTripsList[1].display_name,
-    });
-  });
-
-  it('should return sorted paginated results', async () => {
-    let tripsLits = await tripsService.searchTripsFromIntegration({
-      origin: PlaceCode.AMS,
-      destination: PlaceCode.FRA,
-      sortBy: SortBy.CHEAPEST,
-      page: 2,
-      itemsPerPage: 2,
-    });
-
-    expect(tripsLits.items).toHaveLength(2);
-    expect(tripsLits.currentPage).toEqual(2);
-    expect(tripsLits.totalPages).toEqual(2);
-    expect(tripsLits.totalItems).toEqual(mockTripsList.length);
-    expect(tripsLits.itemsPerPage).toEqual(2);
-    expect(tripsLits.items[0]).toEqual({
-      origin: mockTripsList[1].origin,
-      destination: mockTripsList[1].destination,
-      cost: mockTripsList[1].cost,
-      duration: mockTripsList[1].duration,
-      type: mockTripsList[1].type,
-      remoteId: mockTripsList[1].id,
-      displayName: mockTripsList[1].display_name,
-    });
-
-    tripsLits = await tripsService.searchTripsFromIntegration({
-      origin: PlaceCode.AMS,
-      destination: PlaceCode.FRA,
-      sortBy: SortBy.CHEAPEST,
-      page: 20,
-      itemsPerPage: 2,
-    });
-
-    expect(tripsLits.items).toHaveLength(0);
-    expect(tripsLits.currentPage).toEqual(20);
-    expect(tripsLits.totalPages).toEqual(2);
-    expect(tripsLits.totalItems).toEqual(mockTripsList.length);
-    expect(tripsLits.itemsPerPage).toEqual(2);
   });
 });

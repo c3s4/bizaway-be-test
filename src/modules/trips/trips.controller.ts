@@ -1,21 +1,18 @@
-import {
-  BadRequestException,
-  ClassSerializerInterceptor,
-  Controller,
-  Get,
-  Logger,
-  Query,
-  UseInterceptors,
-} from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Logger, Post, Query } from '@nestjs/common';
 import { SearchTripsListResponseDto, SearchTripsRequestDto } from './dtos/search_trips.dto';
 import { TripsService } from './service/trips.service';
+import { SaveTripRequestDto, SaveTripResponseDto } from './dtos/save_trip.dto';
 
 @Controller('trips')
 export class TripsController {
   private logger = new Logger(TripsController.name);
   constructor(private tripService: TripsService) {}
 
-  @UseInterceptors(ClassSerializerInterceptor)
+  @Post('/')
+  async saveTrip(@Body() saveTripRequest: SaveTripRequestDto): Promise<SaveTripResponseDto> {
+    return await this.tripService.saveTrip(saveTripRequest);
+  }
+
   @Get('/search')
   async searchTrips(@Query() searchParams: SearchTripsRequestDto): Promise<SearchTripsListResponseDto> {
     const foundTrips = await this.tripService.searchTripsFromIntegration(searchParams);
