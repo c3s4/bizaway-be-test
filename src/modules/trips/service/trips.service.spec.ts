@@ -4,9 +4,9 @@ import { HttpService } from '@nestjs/axios';
 import { of } from 'rxjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envConfig, validateEnv } from '../../../common/configs/environment';
-import { PlaceCode, SortBy } from '../dtos/search_trips.dto';
+import { PlaceCode, SearchTripIntegrationResponseDto, SortBy } from '../dtos/search_trips.dto';
 
-const mockTripsList = [
+const mockTripsList: SearchTripIntegrationResponseDto[] = [
   {
     origin: 'AMS',
     destination: 'FRA',
@@ -116,7 +116,7 @@ describe('TripsService', () => {
         duration: trip.duration,
         type: trip.type,
         remoteId: trip.id,
-        display_name: trip.display_name,
+        displayName: trip.display_name,
       });
     });
   });
@@ -175,7 +175,7 @@ describe('TripsService', () => {
       duration: mockTripsList[0].duration,
       type: mockTripsList[0].type,
       remoteId: mockTripsList[0].id,
-      display_name: mockTripsList[0].display_name,
+      displayName: mockTripsList[0].display_name,
     });
 
     tripsLits = await tripsService.searchTripsFromIntegration({
@@ -193,7 +193,7 @@ describe('TripsService', () => {
       duration: mockTripsList[2].duration,
       type: mockTripsList[2].type,
       remoteId: mockTripsList[2].id,
-      display_name: mockTripsList[2].display_name,
+      displayName: mockTripsList[2].display_name,
     });
 
     tripsLits = await tripsService.searchTripsFromIntegration({
@@ -215,7 +215,7 @@ describe('TripsService', () => {
       duration: mockTripsList[1].duration,
       type: mockTripsList[1].type,
       remoteId: mockTripsList[1].id,
-      display_name: mockTripsList[1].display_name,
+      displayName: mockTripsList[1].display_name,
     });
   });
 
@@ -240,7 +240,7 @@ describe('TripsService', () => {
       duration: mockTripsList[1].duration,
       type: mockTripsList[1].type,
       remoteId: mockTripsList[1].id,
-      display_name: mockTripsList[1].display_name,
+      displayName: mockTripsList[1].display_name,
     });
 
     tripsLits = await tripsService.searchTripsFromIntegration({

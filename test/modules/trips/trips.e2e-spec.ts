@@ -63,12 +63,22 @@ describe('[Feature] Trips - /trips', () => {
       const response = await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST')
         .expect(200);
-      expect(response.body).toHaveProperty('currentPage');
-      expect(response.body).toHaveProperty('totalPages');
-      expect(response.body).toHaveProperty('totalItems');
-      expect(response.body).toHaveProperty('itemsPerPage');
+      expect(response.body).toHaveProperty('current_page');
+      expect(response.body).toHaveProperty('total_pages');
+      expect(response.body).toHaveProperty('total_items');
+      expect(response.body).toHaveProperty('items_per_page');
       expect(response.body).toHaveProperty('items');
       expect(Array.isArray(response.body.items)).toBeTruthy();
+
+      if (response.body.items.length > 0) {
+        expect(response.body.items[0]).toHaveProperty('origin');
+        expect(response.body.items[0]).toHaveProperty('destination');
+        expect(response.body.items[0]).toHaveProperty('cost');
+        expect(response.body.items[0]).toHaveProperty('duration');
+        expect(response.body.items[0]).toHaveProperty('type');
+        expect(response.body.items[0]).toHaveProperty('remote_id');
+        expect(response.body.items[0]).toHaveProperty('display_name');
+      }
 
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&sort_by=fastest')

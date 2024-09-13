@@ -49,15 +49,17 @@ export class TripsService {
     this.logger.log(`Successfully fetched trips from external API. Trips count: ${response.data.length}`);
 
     const remappedResponse = response.data.map<SearchTripResponseDto>((trip) => {
-      return {
+      const singleTrip = new SearchTripResponseDto({
         origin: trip.origin,
         destination: trip.destination,
         cost: trip.cost,
         duration: trip.duration,
         type: trip.type,
         remoteId: trip.id,
-        display_name: trip.display_name,
-      };
+        displayName: trip.display_name,
+      });
+
+      return singleTrip;
     });
 
     if (sortBy) {
@@ -73,12 +75,12 @@ export class TripsService {
     const startingIndex = (page - 1) * itemsPerPage;
     const endingIndex = startingIndex + itemsPerPage;
 
-    return {
+    return new SearchTripsListResponseDto({
       items: remappedResponse.slice(startingIndex, endingIndex),
       currentPage: page,
       totalPages: Math.ceil(remappedResponse.length / itemsPerPage),
       totalItems: remappedResponse.length,
       itemsPerPage: itemsPerPage,
-    };
+    });
   }
 }

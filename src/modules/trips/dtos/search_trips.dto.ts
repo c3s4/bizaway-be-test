@@ -87,8 +87,20 @@ export class SearchTripResponseDto {
   cost: number;
   duration: number;
   type: string;
-  display_name: string;
+  @Expose({ name: 'display_name' })
+  displayName: string;
+  @Expose({ name: 'remote_id' })
   remoteId: string;
+
+  constructor(trip: SearchTripResponseDto) {
+    this.origin = trip.origin;
+    this.destination = trip.destination;
+    this.cost = trip.cost;
+    this.duration = trip.duration;
+    this.type = trip.type;
+    this.remoteId = trip.remoteId;
+    this.displayName = trip.displayName;
+  }
 }
 
 export class SearchTripsListResponseDto extends PagedResponseDto<SearchTripResponseDto> {}
