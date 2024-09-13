@@ -9,5 +9,10 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ADMIN_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ADMIN_PASSWORD}
+    networks:
+      - prod-network
   
+networks:
+  prod-network:
+
   # myApp: // here the code to build and start my app
