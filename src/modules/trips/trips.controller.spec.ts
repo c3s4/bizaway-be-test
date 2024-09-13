@@ -54,71 +54,73 @@ describe('TripsController', () => {
     tripService = module.get<TripsService>(TripsService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
-  it('should return a list of trips', async () => {
-    let searchParams: SearchTripsRequestDto = {
-      origin: PlaceCode.BCN,
-      destination: PlaceCode.LAX,
-    };
-    const foundTrips = await controller.searchTrips(searchParams);
-    expect(foundTrips).toEqual({
-      items: trips,
-      totalItems: 3,
-      currentPage: 1,
-      totalPages: 2,
-      itemsPerPage: 2,
+  describe('searchTrips', () => {
+    it('should be defined', () => {
+      expect(controller).toBeDefined();
     });
 
-    expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
+    it('should return a list of trips', async () => {
+      let searchParams: SearchTripsRequestDto = {
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+      };
+      const foundTrips = await controller.searchTrips(searchParams);
+      expect(foundTrips).toEqual({
+        items: trips,
+        totalItems: 3,
+        currentPage: 1,
+        totalPages: 2,
+        itemsPerPage: 2,
+      });
 
-    searchParams = {
-      origin: PlaceCode.BCN,
-      destination: PlaceCode.LAX,
-      sortBy: SortBy.CHEAPEST,
-    };
+      expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
 
-    await controller.searchTrips(searchParams);
-    expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
+      searchParams = {
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+        sortBy: SortBy.CHEAPEST,
+      };
 
-    searchParams = {
-      origin: PlaceCode.BCN,
-      destination: PlaceCode.LAX,
-      page: 2,
-    };
-    await controller.searchTrips(searchParams);
-    expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
+      await controller.searchTrips(searchParams);
+      expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
 
-    searchParams = {
-      origin: PlaceCode.BCN,
-      destination: PlaceCode.LAX,
-      page: 2,
-      itemsPerPage: 1,
-    };
-    await controller.searchTrips(searchParams);
-    expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
+      searchParams = {
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+        page: 2,
+      };
+      await controller.searchTrips(searchParams);
+      expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
 
-    searchParams = {
-      origin: PlaceCode.BCN,
-      destination: PlaceCode.LAX,
-      page: 2,
-      itemsPerPage: 1,
-      sortBy: SortBy.FASTEST,
-    };
-    await controller.searchTrips(searchParams);
-    expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
-  });
+      searchParams = {
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+        page: 2,
+        itemsPerPage: 1,
+      };
+      await controller.searchTrips(searchParams);
+      expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
 
-  it('should throw an error if the page number is too high', async () => {
-    const searchParams: SearchTripsRequestDto = {
-      origin: PlaceCode.BCN,
-      destination: PlaceCode.LAX,
-      page: 3,
-    };
-    const foundTrips = controller.searchTrips(searchParams);
-    expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
-    await expect(foundTrips).rejects.toThrow(BadRequestException);
+      searchParams = {
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+        page: 2,
+        itemsPerPage: 1,
+        sortBy: SortBy.FASTEST,
+      };
+      await controller.searchTrips(searchParams);
+      expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
+    });
+
+    it('should throw an error if the page number is too high', async () => {
+      const searchParams: SearchTripsRequestDto = {
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+        page: 3,
+      };
+      const foundTrips = controller.searchTrips(searchParams);
+      expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
+      await expect(foundTrips).rejects.toThrow(BadRequestException);
+    });
   });
 });
