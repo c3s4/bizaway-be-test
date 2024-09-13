@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { IsEnum, IsNumber, IsPositive, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsPositive, IsString, IsUUID, MinLength } from 'class-validator';
 import { PlaceCode, TripType } from '../../../common/dtos/trip.enum';
 
 export class SaveTripRequestDto {
@@ -7,19 +7,17 @@ export class SaveTripRequestDto {
   origin: PlaceCode;
   @IsEnum(PlaceCode)
   destination: PlaceCode;
-  @IsNumber()
   @IsPositive()
   cost: number;
-  @IsNumber()
   @IsPositive()
   duration: number;
   @IsEnum(TripType)
   type: TripType;
   @Expose({ name: 'remote_id' })
-  @IsUUID()
+  @IsUUID('all', { message: 'remote_id must be a UUID' })
   remoteId: string;
   @Expose({ name: 'display_name' })
-  @IsString()
+  @MinLength(1, { message: 'display_name must be a string' })
   displayName: string;
 }
 
