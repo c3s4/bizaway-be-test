@@ -34,6 +34,8 @@ describe('TripsRepository', () => {
 
     orm = app.get<MikroORM>(MikroORM);
     tripsRepository = app.get<TripsRepository>(TripsRepository);
+
+    await orm.schema.refreshDatabase();
   });
 
   describe('createTrip', () => {
