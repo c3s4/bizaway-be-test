@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/mongodb';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Trip } from '../entites/trip.entity';
 import { SaveTripRequestDto } from '../../dtos/save_trip.dto';
 
@@ -22,5 +22,13 @@ export class TripsRepository {
       trips: foundTrips,
       totalTrips: totalTripsCount,
     };
+  }
+
+  async deleteTripById(tripId: string): Promise<void> {
+    const deletedCount = await this.em.nativeDelete(Trip, { id: tripId });
+
+    if (deletedCount === 0) {
+      throw new NotFoundException();
+    }
   }
 }

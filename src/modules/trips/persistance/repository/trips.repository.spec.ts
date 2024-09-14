@@ -7,6 +7,7 @@ import { dbConfig } from '../../../../common/configs/mikro_orm.config';
 import { envConfig, validateEnv } from '../../../../common/configs/environment';
 import { PlaceCode, TripType } from '../../../../common/dtos/trip.enum';
 import { Trip } from '../entites/trip.entity';
+import { NotFoundException } from '@nestjs/common';
 
 describe('TripsRepository', () => {
   let tripsRepository: TripsRepository;
@@ -112,6 +113,74 @@ describe('TripsRepository', () => {
       const results = await tripsRepository.getTrips(1, 10);
       expect(results.trips.length).toBe(0);
       expect(results.totalTrips).toBe(0);
+    });
+  });
+
+  describe('deleteTripById', () => {
+    it('should throw not found exception', async () => {
+      const trip1 = new Trip({
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
+      await orm.em.persistAndFlush(trip1);
+
+      const response = tripsRepository.deleteTripById('fake id');
+      expect(response).rejects.toThrow(NotFoundException);
+    });
+
+    it('should delete exactly one record', async () => {
+      const trip1 = new Trip({
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
+
+      const trip2 = new Trip({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.BKK,
+        cost: 1000,
+        duration: 100,
+        type: TripType.CAR,
+        remoteId: '2',
+        displayName: 'Trip 2',
+      });
+
+      const trip3 = new Trip({
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+        cost: 200,
+        duration: 20,
+        type: TripType.TRAIN,
+        remoteId: '3',
+        displayName: 'Trip 3',
+      });
+
+      await orm.em.persistAndFlush([trip1, trip2, trip3]);
+      let allTrips = await orm.em.findAll(Trip);
+      expect(allTrips.length).toBe(3);
+
+      const response = tripsRepository.deleteTripById(trip2.id);
+      expect(response).resolves.toBeUndefined();
+      allTrips = await orm.em.findAll(Trip);
+      expect(allTrips.length).toBe(2);
+
+      await tripsRepository.deleteTripById(trip1.id);
+      allTrips = await orm.em.findAll(Trip);
+      expect(allTrips.length).toBe(1);
+      expect(allTrips[0]).toEqual(trip3);
+
+      await tripsRepository.deleteTripById(trip3.id);
+      allTrips = await orm.em.findAll(Trip);
+      expect(allTrips.length).toBe(0);
     });
   });
 
