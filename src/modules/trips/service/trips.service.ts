@@ -105,4 +105,8 @@ export class TripsService {
       itemsPerPage: itemsPerPage,
     });
   }
+
+  async deleteTripById(tripId: string): Promise<void> {
+    await this.tripsRepository.deleteTripById(tripId);
+  }
 }

@@ -1,4 +1,15 @@
-import { BadRequestException, Body, Controller, Get, Logger, Post, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Logger,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { SearchTripsListResponseDto, SearchTripsRequestDto } from './dtos/search_trips.dto';
 import { TripsService } from './service/trips.service';
 import { SaveTripRequestDto, SaveTripResponseDto } from './dtos/save_trip.dto';
@@ -17,6 +28,12 @@ export class TripsController {
   @Get('/')
   async getTrips(@Query() getTripsParams?: GetTripsRequestDto): Promise<GetTripsListResponseDto> {
     return await this.tripService.getTrips(getTripsParams);
+  }
+
+  @Delete('/:id')
+  @HttpCode(204)
+  async deleteTripById(@Param('id') id: string) {
+    await this.tripService.deleteTripById(id);
   }
 
   @Get('/search')

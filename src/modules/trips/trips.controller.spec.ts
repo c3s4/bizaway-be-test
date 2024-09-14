@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TripsController } from './trips.controller';
 import { TripsService } from './service/trips.service';
 import { SearchTripResponseDto, SearchTripsRequestDto, SortBy } from './dtos/search_trips.dto';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PlaceCode, TripType } from '../../common/dtos/trip.enum';
 import { SaveTripResponseDto } from './dtos/save_trip.dto';
 
@@ -88,6 +88,7 @@ const mockTripsService = (): Partial<TripsService> => ({
   }),
   saveTrip: jest.fn().mockResolvedValue(mockSavedTrips[0]),
   getTrips: jest.fn().mockResolvedValue(mockedTripsList),
+  deleteTripById: jest.fn().mockResolvedValue(undefined),
 });
 describe('TripsController', () => {
   let controller: TripsController;
@@ -225,6 +226,21 @@ describe('TripsController', () => {
         totalPages: 0,
         itemsPerPage: 10,
       });
+    });
+  });
+
+  describe('deleteTripById', () => {
+    it('should call service as expected', () => {
+      const responsePromise = controller.deleteTripById('any id');
+      expect(responsePromise).resolves.toBeUndefined();
+      expect(tripService.deleteTripById).toHaveBeenCalledWith('any id');
+    });
+    it('should throw not found exception', () => {
+      tripService.deleteTripById = jest.fn().mockRejectedValue(new NotFoundException());
+
+      const responsePromise = controller.deleteTripById('any id');
+      expect(responsePromise).rejects.toThrow(NotFoundException);
+      expect(tripService.deleteTripById).toHaveBeenCalledWith('any id');
     });
   });
 });

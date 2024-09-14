@@ -252,6 +252,75 @@ describe('[Feature] Trips - /trips', () => {
     });
   });
 
+  describe.only('DELETE /:id', () => {
+    it('should delete trips as expected', async () => {
+      const trip1 = new Trip({
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
+
+      const trip2 = new Trip({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.BKK,
+        cost: 1000,
+        duration: 100,
+        type: TripType.CAR,
+        remoteId: '2',
+        displayName: 'Trip 2',
+      });
+
+      const trip3 = new Trip({
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+        cost: 200,
+        duration: 20,
+        type: TripType.TRAIN,
+        remoteId: '3',
+        displayName: 'Trip 3',
+      });
+
+      await orm.em.persistAndFlush([trip1, trip2, trip3]);
+
+      let allTrips = await orm.em.findAll(Trip);
+      expect(allTrips).toHaveLength(3);
+
+      await request(app.getHttpServer()).delete(`/api/trips/${trip2.id}`).expect(204);
+      allTrips = await orm.em.findAll(Trip);
+      expect(allTrips).toHaveLength(2);
+
+      await request(app.getHttpServer()).delete(`/api/trips/${trip1.id}`).expect(204);
+      allTrips = await orm.em.findAll(Trip);
+      expect(allTrips).toHaveLength(1);
+
+      await request(app.getHttpServer()).delete(`/api/trips/${trip3.id}`).expect(204);
+      allTrips = await orm.em.findAll(Trip);
+      expect(allTrips).toHaveLength(0);
+    });
+
+    it('should fail with not found exception', async () => {
+      await request(app.getHttpServer()).delete(`/api/trips/fake_id`).expect(404);
+
+      const trip1 = new Trip({
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
+      await orm.em.persistAndFlush(trip1);
+
+      await request(app.getHttpServer()).delete(`/api/trips/fake_id`).expect(404);
+      await request(app.getHttpServer()).delete(`/api/trips/`).expect(404);
+    });
+  });
+
   afterEach(async () => {
     await orm.schema.refreshDatabase();
     await app.close();
