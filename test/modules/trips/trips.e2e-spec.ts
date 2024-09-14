@@ -162,7 +162,7 @@ describe('[Feature] Trips - /trips', () => {
     });
   });
 
-  describe.only('GET /', () => {
+  describe('GET /', () => {
     it('should fail because of not valid data', async () => {
       await request(app.getHttpServer()).get('/api/trips?page=0').expect(400);
       await request(app.getHttpServer()).get('/api/trips?page=-1').expect(400);
