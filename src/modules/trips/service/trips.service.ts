@@ -109,4 +109,9 @@ export class TripsService {
   async deleteTripById(tripId: string): Promise<void> {
     await this.tripsRepository.deleteTripById(tripId);
   }
+
+  async getTripById(tripId: string): Promise<SaveTripResponseDto> {
+    const trip = await this.tripsRepository.getTripById(tripId);
+    return new SaveTripResponseDto(trip);
+  }
 }
