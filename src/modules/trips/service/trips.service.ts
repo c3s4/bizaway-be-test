@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import {
   SearchTripIntegrationResponseDto,
   SearchTripResponseDto,
@@ -46,7 +46,7 @@ export class TripsService {
         .pipe(
           catchError((error: any) => {
             this.logger.error(error.response.data);
-            throw 'An error happened!';
+            throw new InternalServerErrorException('Error connecting to external API');
           }),
         ),
     );

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TripsService } from './trips.service';
 import { HttpService } from '@nestjs/axios';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envConfig, validateEnv } from '../../../common/configs/environment';
 import { SearchTripIntegrationResponseDto, SortBy } from '../dtos/search_trips.dto';
@@ -11,7 +11,7 @@ import { Trip } from '../persistance/entites/trip.entity';
 import { SaveTripResponseDto } from '../dtos/save_trip.dto';
 import { PAGINATION } from '../../../common/configs/constants';
 import { GetTripsListResponseDto } from '../dtos/get_trips.dto';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 
 const mockTripsList: SearchTripIntegrationResponseDto[] = [
   {
@@ -96,8 +96,6 @@ mockSavedTrips[1].id = 'fake id 2';
 mockSavedTrips[2].id = 'fake id 3';
 mockSavedTrips[3].id = 'fake id 4';
 
-// mockSavedTrip.id = 'fake id';
-
 describe('TripsService', () => {
   let tripsService: TripsService;
   let httpService: HttpService;
@@ -167,6 +165,17 @@ describe('TripsService', () => {
           },
         },
       );
+    });
+
+    it('should throw internal server error exception', async () => {
+      httpService.get = jest.fn(() => throwError(() => new BadRequestException()));
+
+      const pendingResponse = tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.EWR,
+      });
+
+      expect(pendingResponse).rejects.toThrow(InternalServerErrorException);
     });
 
     it('should return unsorted list of trips', async () => {
