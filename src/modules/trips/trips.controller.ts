@@ -32,7 +32,7 @@ export class TripsController {
 
   @Delete('/:id')
   @HttpCode(204)
-  async deleteTripById(@Param() id: string) {
+  async deleteTripById(@Param('id') id: string) {
     await this.tripService.deleteTripById(id);
   }
 
