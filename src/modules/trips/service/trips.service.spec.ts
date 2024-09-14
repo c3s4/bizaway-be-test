@@ -11,6 +11,7 @@ import { Trip } from '../persistance/entites/trip.entity';
 import { SaveTripResponseDto } from '../dtos/save_trip.dto';
 import { PAGINATION } from '../../../common/configs/constants';
 import { GetTripsListResponseDto } from '../dtos/get_trips.dto';
+import { NotFoundException } from '@nestjs/common';
 
 const mockTripsList: SearchTripIntegrationResponseDto[] = [
   {
@@ -126,6 +127,7 @@ describe('TripsService', () => {
           useFactory: () => ({
             createTrip: jest.fn().mockResolvedValue(mockSavedTrips[0]),
             getTrips: jest.fn().mockResolvedValue({ trips: mockSavedTrips, totalTrips: mockSavedTrips.length }),
+            deleteTripById: jest.fn().mockResolvedValue(undefined),
           }),
         },
       ],
@@ -410,6 +412,21 @@ describe('TripsService', () => {
       expect(trips.currentPage).toEqual(PAGINATION.DEFAULT_PAGE);
       expect(trips.totalPages).toEqual(0);
       expect(trips.itemsPerPage).toEqual(PAGINATION.DEFAULT_ITEMS_PER_PAGE);
+    });
+  });
+
+  describe('deleteTripById', () => {
+    it('should call repository as expected', async () => {
+      const promise = tripsService.deleteTripById('fake id');
+      expect(promise).resolves.toBeUndefined();
+      expect(tripsRepository.deleteTripById).toHaveBeenCalledWith('fake id');
+    });
+
+    it('should throw not found exception', async () => {
+      tripsRepository.deleteTripById = jest.fn().mockRejectedValue(new NotFoundException());
+      const promise = tripsService.deleteTripById('fake id');
+      expect(promise).rejects.toThrow(NotFoundException);
+      expect(tripsRepository.deleteTripById).toHaveBeenCalledWith('fake id');
     });
   });
 });
