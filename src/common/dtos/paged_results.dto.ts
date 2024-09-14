@@ -1,5 +1,6 @@
 import { Expose } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class PagedRequestDto {
   @IsOptional()
@@ -15,6 +16,7 @@ export class PagedRequestDto {
 }
 
 export abstract class PagedResponseDto<T> {
+  @ApiProperty()
   items: T[];
   @Expose({ name: 'current_page' })
   currentPage: number;
