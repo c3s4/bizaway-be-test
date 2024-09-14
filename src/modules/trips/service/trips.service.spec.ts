@@ -128,6 +128,7 @@ describe('TripsService', () => {
             createTrip: jest.fn().mockResolvedValue(mockSavedTrips[0]),
             getTrips: jest.fn().mockResolvedValue({ trips: mockSavedTrips, totalTrips: mockSavedTrips.length }),
             deleteTripById: jest.fn().mockResolvedValue(undefined),
+            getTripById: jest.fn().mockResolvedValue(mockSavedTrips[0]),
           }),
         },
       ],
@@ -427,6 +428,32 @@ describe('TripsService', () => {
       const promise = tripsService.deleteTripById('fake id');
       expect(promise).rejects.toThrow(NotFoundException);
       expect(tripsRepository.deleteTripById).toHaveBeenCalledWith('fake id');
+    });
+  });
+
+  describe('getTripById', () => {
+    it('should get trip by id', async () => {
+      const trip = await tripsService.getTripById('fake id');
+      expect(trip).toEqual({
+        id: mockSavedTrips[0].id,
+        origin: mockSavedTrips[0].origin,
+        destination: mockSavedTrips[0].destination,
+        cost: mockSavedTrips[0].cost,
+        duration: mockSavedTrips[0].duration,
+        type: mockSavedTrips[0].type,
+        remoteId: mockSavedTrips[0].remoteId,
+        displayName: mockSavedTrips[0].displayName,
+      });
+
+      expect(trip instanceof SaveTripResponseDto).toBeTruthy();
+      expect(tripsRepository.getTripById).toHaveBeenCalledWith('fake id');
+    });
+
+    it('should throw not found exception', async () => {
+      tripsRepository.getTripById = jest.fn().mockRejectedValue(new NotFoundException());
+      const promise = tripsService.getTripById('fake id');
+      expect(promise).rejects.toThrow(NotFoundException);
+      expect(tripsRepository.getTripById).toHaveBeenCalledWith('fake id');
     });
   });
 });

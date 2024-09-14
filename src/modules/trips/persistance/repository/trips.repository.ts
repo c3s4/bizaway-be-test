@@ -31,4 +31,12 @@ export class TripsRepository {
       throw new NotFoundException();
     }
   }
+
+  async getTripById(tripId: string): Promise<Trip> {
+    try {
+      return await this.em.findOneOrFail(Trip, { id: tripId });
+    } catch (err) {
+      throw new NotFoundException();
+    }
+  }
 }

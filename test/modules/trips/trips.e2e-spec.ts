@@ -252,7 +252,86 @@ describe('[Feature] Trips - /trips', () => {
     });
   });
 
-  describe.only('DELETE /:id', () => {
+  describe('GET /:id', () => {
+    it('should return a trip as expected', async () => {
+      const trip1 = new Trip({
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
+
+      const trip2 = new Trip({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.BKK,
+        cost: 1000,
+        duration: 100,
+        type: TripType.CAR,
+        remoteId: '2',
+        displayName: 'Trip 2',
+      });
+
+      const trip3 = new Trip({
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+        cost: 200,
+        duration: 20,
+        type: TripType.TRAIN,
+        remoteId: '3',
+        displayName: 'Trip 3',
+      });
+
+      await orm.em.persistAndFlush([trip1, trip2, trip3]);
+
+      let response = await request(app.getHttpServer()).get(`/api/trips/${trip1.id}`);
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        id: trip1.id,
+        origin: trip1.origin,
+        destination: trip1.destination,
+        cost: trip1.cost,
+        duration: trip1.duration,
+        type: trip1.type,
+        remote_id: trip1.remoteId,
+        display_name: trip1.displayName,
+      });
+
+      response = await request(app.getHttpServer()).get(`/api/trips/${trip2.id}`);
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        id: trip2.id,
+        origin: trip2.origin,
+        destination: trip2.destination,
+        cost: trip2.cost,
+        duration: trip2.duration,
+        type: trip2.type,
+        remote_id: trip2.remoteId,
+        display_name: trip2.displayName,
+      });
+    });
+
+    it('should fail with not found exception', async () => {
+      await request(app.getHttpServer()).get(`/api/trips/fake_id`).expect(404);
+
+      const trip1 = new Trip({
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
+      await orm.em.persistAndFlush(trip1);
+
+      await request(app.getHttpServer()).get(`/api/trips/fake_id`).expect(404);
+    });
+  });
+
+  describe('DELETE /:id', () => {
     it('should delete trips as expected', async () => {
       const trip1 = new Trip({
         origin: PlaceCode.JFK,

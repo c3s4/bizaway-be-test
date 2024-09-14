@@ -89,6 +89,7 @@ const mockTripsService = (): Partial<TripsService> => ({
   saveTrip: jest.fn().mockResolvedValue(mockSavedTrips[0]),
   getTrips: jest.fn().mockResolvedValue(mockedTripsList),
   deleteTripById: jest.fn().mockResolvedValue(undefined),
+  getTripById: jest.fn().mockResolvedValue(mockSavedTrips[0]),
 });
 describe('TripsController', () => {
   let controller: TripsController;
@@ -241,6 +242,20 @@ describe('TripsController', () => {
       const responsePromise = controller.deleteTripById('any id');
       expect(responsePromise).rejects.toThrow(NotFoundException);
       expect(tripService.deleteTripById).toHaveBeenCalledWith('any id');
+    });
+  });
+
+  describe('getTripById', () => {
+    it('should return a trip', async () => {
+      const trip = await controller.getTripById('fake id 1');
+      expect(trip).toEqual(mockSavedTrips[0]);
+      expect(tripService.getTripById).toHaveBeenCalledWith('fake id 1');
+    });
+    it('should throw a not found exception', async () => {
+      tripService.getTripById = jest.fn().mockRejectedValue(new NotFoundException());
+      const responsePromise = controller.getTripById('any id');
+      expect(responsePromise).rejects.toThrow(NotFoundException);
+      expect(tripService.getTripById).toHaveBeenCalledWith('any id');
     });
   });
 });
