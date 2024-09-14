@@ -29,7 +29,7 @@ describe('[Feature] Trips - /trips', () => {
         MikroOrmModule.forRootAsync({
           imports: [
             ConfigModule.forRoot({
-              envFilePath: '.env',
+              envFilePath: '.env.test.local',
               expandVariables: true,
             }),
           ],
@@ -113,11 +113,19 @@ describe('[Feature] Trips - /trips', () => {
         .expect(200);
 
       await request(app.getHttpServer())
+        .get('/api/trips/search?origin=bcn&destination=ist&trip_type=flight')
+        .expect(200);
+
+      await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&sort_by=fastest&trip_type=train&page=1&items_per_page=10')
         .expect(200);
 
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=IST&destination=IST&sort_by=fastest&page=1&items_per_page=10')
+        .expect(200);
+
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=bcn&destination=ist&sort_by=FAStest&trip_type=trAIN&page=1&items_per_page=10')
         .expect(200);
     });
   });

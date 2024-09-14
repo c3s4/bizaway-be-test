@@ -54,5 +54,16 @@ describe('Search trips DTO', () => {
       errors = await validate(request);
       expect(errors.length).toBe(0);
     });
+
+    it('should work also with wrong case', async () => {
+      const request = plainToInstance(SearchTripsRequestDto, {
+        origin: 'bCn',
+        destination: 'amS',
+        sort_by: 'CHeAPEsT',
+        trip_type: 'FlIGhT',
+      });
+      const errors = await validate(request);
+      expect(errors.length).toBe(0);
+    });
   });
 });
