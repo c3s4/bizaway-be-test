@@ -2,6 +2,7 @@ import { BadRequestException, Body, Controller, Get, Logger, Post, Query } from 
 import { SearchTripsListResponseDto, SearchTripsRequestDto } from './dtos/search_trips.dto';
 import { TripsService } from './service/trips.service';
 import { SaveTripRequestDto, SaveTripResponseDto } from './dtos/save_trip.dto';
+import { GetTripsListResponseDto, GetTripsRequestDto } from './dtos/get_trips.dto';
 
 @Controller('trips')
 export class TripsController {
@@ -11,6 +12,11 @@ export class TripsController {
   @Post('/')
   async saveTrip(@Body() saveTripRequest: SaveTripRequestDto): Promise<SaveTripResponseDto> {
     return await this.tripService.saveTrip(saveTripRequest);
+  }
+
+  @Get('/')
+  async getTrips(@Query() getTripsParams?: GetTripsRequestDto): Promise<GetTripsListResponseDto> {
+    return await this.tripService.getTrips(getTripsParams);
   }
 
   @Get('/search')

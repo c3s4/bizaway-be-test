@@ -9,6 +9,8 @@ import { PlaceCode, TripType } from '../../../common/dtos/trip.enum';
 import { TripsRepository } from '../persistance/repository/trips.repository';
 import { Trip } from '../persistance/entites/trip.entity';
 import { SaveTripResponseDto } from '../dtos/save_trip.dto';
+import { PAGINATION } from '../../../common/configs/constants';
+import { GetTripsListResponseDto } from '../dtos/get_trips.dto';
 
 const mockTripsList: SearchTripIntegrationResponseDto[] = [
   {
@@ -49,16 +51,51 @@ const mockTripsList: SearchTripIntegrationResponseDto[] = [
   },
 ];
 
-const mockSavedTrip: Trip = new Trip({
-  origin: PlaceCode.JFK,
-  destination: PlaceCode.LAX,
-  cost: 100,
-  duration: 10,
-  type: TripType.FLIGHT,
-  remoteId: '1',
-  displayName: 'Trip 1',
-});
-mockSavedTrip.id = 'fake id';
+const mockSavedTrips: Trip[] = [
+  new Trip({
+    origin: PlaceCode.JFK,
+    destination: PlaceCode.LAX,
+    cost: 100,
+    duration: 10,
+    type: TripType.FLIGHT,
+    remoteId: '1',
+    displayName: 'Trip 1',
+  }),
+  new Trip({
+    origin: PlaceCode.CAN,
+    destination: PlaceCode.ARN,
+    cost: 8700,
+    duration: 230,
+    type: TripType.TRAIN,
+    remoteId: '123',
+    displayName: 'Trip 2',
+  }),
+  new Trip({
+    origin: PlaceCode.BCN,
+    destination: PlaceCode.LAX,
+    cost: 200,
+    duration: 20,
+    type: TripType.TRAIN,
+    remoteId: '3',
+    displayName: 'Trip 3',
+  }),
+  new Trip({
+    origin: PlaceCode.AMS,
+    destination: PlaceCode.BKK,
+    cost: 1000,
+    duration: 100,
+    type: TripType.CAR,
+    remoteId: '2',
+    displayName: 'Trip 4',
+  }),
+];
+
+mockSavedTrips[0].id = 'fake id 1';
+mockSavedTrips[1].id = 'fake id 2';
+mockSavedTrips[2].id = 'fake id 3';
+mockSavedTrips[3].id = 'fake id 4';
+
+// mockSavedTrip.id = 'fake id';
 
 describe('TripsService', () => {
   let tripsService: TripsService;
@@ -87,7 +124,8 @@ describe('TripsService', () => {
         {
           provide: TripsRepository,
           useFactory: () => ({
-            createTrip: jest.fn().mockResolvedValue(mockSavedTrip),
+            createTrip: jest.fn().mockResolvedValue(mockSavedTrips[0]),
+            getTrips: jest.fn().mockResolvedValue({ trips: mockSavedTrips, totalTrips: mockSavedTrips.length }),
           }),
         },
       ],
@@ -297,18 +335,81 @@ describe('TripsService', () => {
       };
       const savedTrip = await tripsService.saveTrip(newTrip);
       expect(savedTrip).toEqual({
-        id: mockSavedTrip.id,
-        origin: PlaceCode.JFK,
-        destination: PlaceCode.LAX,
-        cost: 100,
-        duration: 10,
-        type: TripType.FLIGHT,
-        remoteId: '1',
-        displayName: 'Trip 1',
+        id: mockSavedTrips[0].id,
+        origin: mockSavedTrips[0].origin,
+        destination: mockSavedTrips[0].destination,
+        cost: mockSavedTrips[0].cost,
+        duration: mockSavedTrips[0].duration,
+        type: mockSavedTrips[0].type,
+        remoteId: mockSavedTrips[0].remoteId,
+        displayName: mockSavedTrips[0].displayName,
       });
 
       expect(savedTrip instanceof SaveTripResponseDto).toBeTruthy();
       expect(tripsRepository.createTrip).toHaveBeenCalledWith(newTrip);
+    });
+  });
+
+  describe('getTrips', () => {
+    it('should get trips', async () => {
+      const trips = await tripsService.getTrips();
+      expect(trips.items).toHaveLength(mockSavedTrips.length);
+      mockSavedTrips.forEach((trip, index) => {
+        expect(trips.items[index]).toEqual({
+          id: trip.id,
+          origin: trip.origin,
+          destination: trip.destination,
+          cost: trip.cost,
+          duration: trip.duration,
+          type: trip.type,
+          remoteId: trip.remoteId,
+          displayName: trip.displayName,
+        });
+      });
+
+      expect(trips.currentPage).toEqual(PAGINATION.DEFAULT_PAGE);
+      expect(trips.totalPages).toEqual(1);
+      expect(trips.totalItems).toEqual(mockSavedTrips.length);
+      expect(trips.itemsPerPage).toEqual(PAGINATION.DEFAULT_ITEMS_PER_PAGE);
+
+      expect(tripsRepository.getTrips).toHaveBeenCalledWith(PAGINATION.DEFAULT_PAGE, PAGINATION.DEFAULT_ITEMS_PER_PAGE);
+      expect(trips instanceof GetTripsListResponseDto).toBeTruthy();
+    });
+
+    it('should get paginated trips', async () => {
+      tripsRepository.getTrips = jest
+        .fn()
+        .mockResolvedValue({ trips: mockSavedTrips.slice(2), totalTrips: mockSavedTrips.length });
+      const trips = await tripsService.getTrips({ page: 2, itemsPerPage: 2 });
+
+      expect(tripsRepository.getTrips).toHaveBeenCalledWith(2, 2);
+      expect(trips.items).toHaveLength(2);
+      expect(trips.currentPage).toEqual(2);
+      expect(trips.totalPages).toEqual(2);
+      expect(trips.totalItems).toEqual(mockSavedTrips.length);
+      expect(trips.itemsPerPage).toEqual(2);
+
+      expect(trips.items[0]).toEqual({
+        id: mockSavedTrips[2].id,
+        origin: mockSavedTrips[2].origin,
+        destination: mockSavedTrips[2].destination,
+        cost: mockSavedTrips[2].cost,
+        duration: mockSavedTrips[2].duration,
+        type: mockSavedTrips[2].type,
+        remoteId: mockSavedTrips[2].remoteId,
+        displayName: mockSavedTrips[2].displayName,
+      });
+    });
+
+    it('should return empty list if no trips are found', async () => {
+      tripsRepository.getTrips = jest.fn().mockResolvedValue({ trips: [], totalTrips: 0 });
+      const trips = await tripsService.getTrips();
+
+      expect(trips.items).toHaveLength(0);
+      expect(trips.totalItems).toEqual(0);
+      expect(trips.currentPage).toEqual(PAGINATION.DEFAULT_PAGE);
+      expect(trips.totalPages).toEqual(0);
+      expect(trips.itemsPerPage).toEqual(PAGINATION.DEFAULT_ITEMS_PER_PAGE);
     });
   });
 });

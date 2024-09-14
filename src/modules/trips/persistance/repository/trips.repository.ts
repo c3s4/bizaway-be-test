@@ -12,4 +12,15 @@ export class TripsRepository {
     await this.em.persistAndFlush(trip);
     return trip;
   }
+
+  async getTrips(page: number, itemsPerPage: number): Promise<{ trips: Trip[]; totalTrips: number }> {
+    const offset = (page - 1) * itemsPerPage;
+
+    const [foundTrips, totalTripsCount] = await this.em.findAndCount(Trip, {}, { limit: itemsPerPage, offset });
+
+    return {
+      trips: foundTrips,
+      totalTrips: totalTripsCount,
+    };
+  }
 }

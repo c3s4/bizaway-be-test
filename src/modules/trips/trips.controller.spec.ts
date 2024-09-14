@@ -27,16 +27,56 @@ const trips: SearchTripResponseDto[] = [
   },
 ];
 
-const mockSavedTrip: SaveTripResponseDto = new SaveTripResponseDto({
-  id: 'fake id',
-  origin: PlaceCode.JFK,
-  destination: PlaceCode.LAX,
-  cost: 100,
-  duration: 10,
-  type: TripType.FLIGHT,
-  remoteId: '1',
-  displayName: 'Trip 1',
-});
+const mockSavedTrips: SaveTripResponseDto[] = [
+  new SaveTripResponseDto({
+    id: 'fake id 1',
+    origin: PlaceCode.JFK,
+    destination: PlaceCode.LAX,
+    cost: 100,
+    duration: 10,
+    type: TripType.FLIGHT,
+    remoteId: '1',
+    displayName: 'Trip 1',
+  }),
+  new SaveTripResponseDto({
+    id: 'fake id',
+    origin: PlaceCode.JNB,
+    destination: PlaceCode.DEL,
+    cost: 200,
+    duration: 20,
+    type: TripType.FLIGHT,
+    remoteId: '2',
+    displayName: 'Trip 2',
+  }),
+  new SaveTripResponseDto({
+    id: 'fake id 3',
+    origin: PlaceCode.BCN,
+    destination: PlaceCode.LAX,
+    cost: 300,
+    duration: 30,
+    type: TripType.CAR,
+    remoteId: '3',
+    displayName: 'Trip 3',
+  }),
+  new SaveTripResponseDto({
+    id: 'fake id 4',
+    origin: PlaceCode.DXB,
+    destination: PlaceCode.CPH,
+    cost: 400,
+    duration: 40,
+    type: TripType.TRAIN,
+    remoteId: '4',
+    displayName: 'Trip 4',
+  }),
+];
+
+const mockedTripsList = {
+  items: mockSavedTrips,
+  totalItems: mockSavedTrips.length,
+  currentPage: 1,
+  totalPages: 2,
+  itemsPerPage: 2,
+};
 
 const mockTripsService = (): Partial<TripsService> => ({
   searchTripsFromIntegration: jest.fn().mockResolvedValue({
@@ -46,8 +86,8 @@ const mockTripsService = (): Partial<TripsService> => ({
     totalPages: 2,
     itemsPerPage: 2,
   }),
-
-  saveTrip: jest.fn().mockResolvedValue(mockSavedTrip),
+  saveTrip: jest.fn().mockResolvedValue(mockSavedTrips[0]),
+  getTrips: jest.fn().mockResolvedValue(mockedTripsList),
 });
 describe('TripsController', () => {
   let controller: TripsController;
@@ -152,7 +192,39 @@ describe('TripsController', () => {
 
       const savedTrip = await controller.saveTrip(saveTripRequest);
       expect(tripService.saveTrip).toHaveBeenCalledWith(saveTripRequest);
-      expect(savedTrip).toEqual(mockSavedTrip);
+      expect(savedTrip).toEqual(mockSavedTrips[0]);
+    });
+  });
+
+  describe('getTrips', () => {
+    it('should return a list of trips', async () => {
+      const tripsResponse = await controller.getTrips();
+      expect(tripsResponse).toEqual(mockedTripsList);
+      expect(tripService.getTrips).toHaveBeenCalledWith(undefined);
+
+      await controller.getTrips({ page: 2 });
+      expect(tripService.getTrips).toHaveBeenCalledWith({ page: 2 });
+
+      await controller.getTrips({ page: 2, itemsPerPage: 14 });
+      expect(tripService.getTrips).toHaveBeenCalledWith({ page: 2, itemsPerPage: 14 });
+    });
+    it('should return an empty list if no trips are found', async () => {
+      tripService.getTrips = jest.fn().mockResolvedValue({
+        items: [],
+        totalItems: 0,
+        currentPage: 1,
+        totalPages: 0,
+        itemsPerPage: 10,
+      });
+
+      const tripsResponse = await controller.getTrips();
+      expect(tripsResponse).toEqual({
+        items: [],
+        totalItems: 0,
+        currentPage: 1,
+        totalPages: 0,
+        itemsPerPage: 10,
+      });
     });
   });
 });

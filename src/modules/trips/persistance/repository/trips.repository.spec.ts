@@ -58,6 +58,63 @@ describe('TripsRepository', () => {
     });
   });
 
+  describe('getAllTrips', () => {
+    it('should return paginated trips', async () => {
+      const trip1 = new Trip({
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
+
+      const trip2 = new Trip({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.BKK,
+        cost: 1000,
+        duration: 100,
+        type: TripType.CAR,
+        remoteId: '2',
+        displayName: 'Trip 2',
+      });
+
+      const trip3 = new Trip({
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+        cost: 200,
+        duration: 20,
+        type: TripType.TRAIN,
+        remoteId: '3',
+        displayName: 'Trip 3',
+      });
+
+      await orm.em.persistAndFlush([trip1, trip2, trip3]);
+
+      let results = await tripsRepository.getTrips(1, 10);
+      expect(results.trips.length).toBe(3);
+      expect(results.trips).toEqual([trip1, trip2, trip3]);
+      expect(results.totalTrips).toBe(3);
+
+      results = await tripsRepository.getTrips(1, 2);
+      expect(results.trips.length).toBe(2);
+      expect(results.trips).toEqual([trip1, trip2]);
+      expect(results.totalTrips).toBe(3);
+
+      results = await tripsRepository.getTrips(2, 2);
+      expect(results.trips.length).toBe(1);
+      expect(results.trips).toEqual([trip3]);
+      expect(results.totalTrips).toBe(3);
+    });
+
+    it('should return empty array if no trips are found', async () => {
+      const results = await tripsRepository.getTrips(1, 10);
+      expect(results.trips.length).toBe(0);
+      expect(results.totalTrips).toBe(0);
+    });
+  });
+
   afterEach(async () => {
     await orm.schema.refreshDatabase();
     app.close();

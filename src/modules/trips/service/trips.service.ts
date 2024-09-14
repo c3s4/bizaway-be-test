@@ -12,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { PAGINATION } from '../../../common/configs/constants';
 import { SaveTripRequestDto, SaveTripResponseDto } from '../dtos/save_trip.dto';
 import { TripsRepository } from '../persistance/repository/trips.repository';
+import { GetTripsListResponseDto, GetTripsRequestDto } from '../dtos/get_trips.dto';
 
 @Injectable()
 export class TripsService {
@@ -90,5 +91,18 @@ export class TripsService {
   async saveTrip(trip: SaveTripRequestDto): Promise<SaveTripResponseDto> {
     const savedTrip = await this.tripsRepository.createTrip(trip);
     return new SaveTripResponseDto(savedTrip);
+  }
+
+  async getTrips(getTripsParams?: GetTripsRequestDto): Promise<GetTripsListResponseDto> {
+    const { page = PAGINATION.DEFAULT_PAGE, itemsPerPage = PAGINATION.DEFAULT_ITEMS_PER_PAGE } = getTripsParams || {};
+
+    const trips = await this.tripsRepository.getTrips(page, itemsPerPage);
+    return new GetTripsListResponseDto({
+      items: trips.trips.map((trip) => new SaveTripResponseDto(trip)),
+      currentPage: page,
+      totalPages: Math.ceil(trips.totalTrips / itemsPerPage),
+      totalItems: trips.totalTrips,
+      itemsPerPage: itemsPerPage,
+    });
   }
 }
