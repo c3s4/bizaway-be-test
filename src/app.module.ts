@@ -16,7 +16,7 @@ import { dbConfig } from './common/configs/mikro_orm.config';
     MikroOrmModule.forRootAsync({
       imports: [
         ConfigModule.forRoot({
-          envFilePath: '.env',
+          load: [envConfig],
           expandVariables: true,
         }),
       ],
