@@ -253,6 +253,7 @@ describe('[Feature] Trips - /trips', () => {
   });
 
   describe.only('DELETE /:id', () => {
+  describe('DELETE /:id', () => {
     it('should delete trips as expected', async () => {
       const trip1 = new Trip({
         origin: PlaceCode.JFK,
