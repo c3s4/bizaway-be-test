@@ -194,14 +194,14 @@ describe('TripsService', () => {
         sortBy: SortBy.CHEAPEST,
       });
       expect(tripsLits.items).toHaveLength(mockTripsList.length);
-      expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
-      expect(tripsLits.items[0].cost).toEqual(2700);
-      expect(tripsLits.items[1].remoteId).toEqual('a387d04a-5619-444a-b4bc-9a817a2d5370');
-      expect(tripsLits.items[1].cost).toEqual(3140);
-      expect(tripsLits.items[2].remoteId).toEqual('52aaf4fb-2f17-4e0b-b4c9-de195b1bb425');
-      expect(tripsLits.items[2].cost).toEqual(5418);
-      expect(tripsLits.items[3].remoteId).toEqual('8e3204f8-7ffc-43b0-ab33-1e57badd9399');
-      expect(tripsLits.items[3].cost).toEqual(7399);
+      expect(tripsLits.items[0].remoteId).toEqual(mockTripsList[2].id);
+      expect(tripsLits.items[0].cost).toEqual(mockTripsList[2].cost);
+      expect(tripsLits.items[1].remoteId).toEqual(mockTripsList[0].id);
+      expect(tripsLits.items[1].cost).toEqual(mockTripsList[0].cost);
+      expect(tripsLits.items[2].remoteId).toEqual(mockTripsList[1].id);
+      expect(tripsLits.items[2].cost).toEqual(mockTripsList[1].cost);
+      expect(tripsLits.items[3].remoteId).toEqual(mockTripsList[3].id);
+      expect(tripsLits.items[3].cost).toEqual(mockTripsList[3].cost);
     });
 
     it('should return list of trips sorted by fastest', async () => {
@@ -211,14 +211,14 @@ describe('TripsService', () => {
         sortBy: SortBy.FASTEST,
       });
       expect(tripsLits.items).toHaveLength(mockTripsList.length);
-      expect(tripsLits.items[0].remoteId).toEqual('3e943e66-ee1a-45c2-84e7-49da4c1e3d7f');
-      expect(tripsLits.items[0].duration).toEqual(6);
-      expect(tripsLits.items[1].remoteId).toEqual('52aaf4fb-2f17-4e0b-b4c9-de195b1bb425');
-      expect(tripsLits.items[1].duration).toEqual(40);
-      expect(tripsLits.items[2].remoteId).toEqual('a387d04a-5619-444a-b4bc-9a817a2d5370');
-      expect(tripsLits.items[2].duration).toEqual(42);
-      expect(tripsLits.items[3].remoteId).toEqual('8e3204f8-7ffc-43b0-ab33-1e57badd9399');
-      expect(tripsLits.items[3].duration).toEqual(47);
+      expect(tripsLits.items[0].remoteId).toEqual(mockTripsList[2].id);
+      expect(tripsLits.items[0].duration).toEqual(mockTripsList[2].duration);
+      expect(tripsLits.items[1].remoteId).toEqual(mockTripsList[1].id);
+      expect(tripsLits.items[1].duration).toEqual(mockTripsList[1].duration);
+      expect(tripsLits.items[2].remoteId).toEqual(mockTripsList[0].id);
+      expect(tripsLits.items[2].duration).toEqual(mockTripsList[0].duration);
+      expect(tripsLits.items[3].remoteId).toEqual(mockTripsList[3].id);
+      expect(tripsLits.items[3].duration).toEqual(mockTripsList[3].duration);
     });
 
     it('should return paginated results', async () => {
@@ -322,6 +322,77 @@ describe('TripsService', () => {
       expect(tripsLits.totalPages).toEqual(2);
       expect(tripsLits.totalItems).toEqual(mockTripsList.length);
       expect(tripsLits.itemsPerPage).toEqual(2);
+    });
+
+    it('should return filtered results', async () => {
+      let tripsLits = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        tripType: TripType.TRAIN,
+      });
+
+      expect(tripsLits.items).toHaveLength(2);
+      expect(tripsLits.items[0].type).toEqual(TripType.TRAIN);
+      expect(tripsLits.items[1].type).toEqual(TripType.TRAIN);
+
+      tripsLits = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        tripType: TripType.CAR,
+      });
+
+      expect(tripsLits.items).toHaveLength(1);
+      expect(tripsLits.items[0].type).toEqual(TripType.CAR);
+    });
+
+    it('should return filtered and sorted results', async () => {
+      let tripsList = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        tripType: TripType.TRAIN,
+        sortBy: SortBy.CHEAPEST,
+      });
+
+      expect(tripsList.items).toHaveLength(2);
+      expect(tripsList.items[0].remoteId).toEqual(mockTripsList[2].id);
+      expect(tripsList.items[0].type).toEqual(TripType.TRAIN);
+      expect(tripsList.items[0].cost).toEqual(mockTripsList[2].cost);
+      expect(tripsList.items[1].remoteId).toEqual(mockTripsList[0].id);
+      expect(tripsList.items[1].type).toEqual(TripType.TRAIN);
+      expect(tripsList.items[1].cost).toEqual(mockTripsList[0].cost);
+
+      tripsList = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        tripType: TripType.TRAIN,
+        sortBy: SortBy.FASTEST,
+      });
+
+      expect(tripsList.items).toHaveLength(2);
+      expect(tripsList.items[0].type).toEqual(TripType.TRAIN);
+      expect(tripsList.items[0].duration).toEqual(mockTripsList[2].duration);
+      expect(tripsList.items[1].type).toEqual('train');
+      expect(tripsList.items[1].duration).toEqual(mockTripsList[0].duration);
+    });
+
+    it('should return filtered, sorted and paginated results', async () => {
+      const tripsList = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+        tripType: TripType.TRAIN,
+        sortBy: SortBy.CHEAPEST,
+        page: 2,
+        itemsPerPage: 1,
+      });
+
+      expect(tripsList.items).toHaveLength(1);
+      expect(tripsList.items[0].remoteId).toEqual(mockTripsList[0].id);
+      expect(tripsList.items[0].type).toEqual(TripType.TRAIN);
+      expect(tripsList.items[0].cost).toEqual(mockTripsList[0].cost);
+      expect(tripsList.currentPage).toEqual(2);
+      expect(tripsList.totalPages).toEqual(2);
+      expect(tripsList.totalItems).toEqual(2);
+      expect(tripsList.itemsPerPage).toEqual(1);
     });
   });
 

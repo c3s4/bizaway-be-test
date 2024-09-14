@@ -111,10 +111,6 @@ describe('TripsController', () => {
   });
 
   describe('searchTrips', () => {
-    it('should be defined', () => {
-      expect(controller).toBeDefined();
-    });
-
     it('should return a list of trips', async () => {
       let searchParams: SearchTripsRequestDto = {
         origin: PlaceCode.BCN,
@@ -163,6 +159,17 @@ describe('TripsController', () => {
         page: 2,
         itemsPerPage: 1,
         sortBy: SortBy.FASTEST,
+      };
+      await controller.searchTrips(searchParams);
+      expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
+
+      searchParams = {
+        origin: PlaceCode.BCN,
+        destination: PlaceCode.LAX,
+        page: 2,
+        itemsPerPage: 1,
+        sortBy: SortBy.FASTEST,
+        tripType: TripType.CAR,
       };
       await controller.searchTrips(searchParams);
       expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);

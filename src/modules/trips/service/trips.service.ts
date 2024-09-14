@@ -30,6 +30,7 @@ export class TripsService {
       itemsPerPage = PAGINATION.DEFAULT_ITEMS_PER_PAGE,
       page = PAGINATION.DEFAULT_PAGE,
       sortBy,
+      tripType,
     } = searchParams;
 
     const response = await lastValueFrom(
@@ -52,7 +53,7 @@ export class TripsService {
 
     this.logger.log(`Successfully fetched trips from external API. Trips count: ${response.data.length}`);
 
-    const remappedResponse = response.data.map<SearchTripResponseDto>((trip) => {
+    let remappedResponse = response.data.map<SearchTripResponseDto>((trip) => {
       const singleTrip = new SearchTripResponseDto({
         origin: trip.origin,
         destination: trip.destination,
@@ -65,6 +66,10 @@ export class TripsService {
 
       return singleTrip;
     });
+
+    if (tripType) {
+      remappedResponse = remappedResponse.filter((trip) => trip.type === tripType);
+    }
 
     if (sortBy) {
       remappedResponse.sort((a, b) => {

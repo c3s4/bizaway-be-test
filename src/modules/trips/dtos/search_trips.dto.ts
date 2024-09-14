@@ -2,7 +2,7 @@ import { IsEnum, IsOptional } from 'class-validator';
 import { PagedRequestDto, PagedResponseDto } from '../../../common/dtos/paged_results.dto';
 import { Expose } from 'class-transformer';
 import { PartialType } from '@nestjs/mapped-types';
-import { PlaceCode } from '../../../common/dtos/trip.enum';
+import { PlaceCode, TripType } from '../../../common/dtos/trip.enum';
 
 export enum SortBy {
   CHEAPEST = 'cheapest',
@@ -12,12 +12,19 @@ export enum SortBy {
 export class SearchTripsRequestDto extends PartialType(PagedRequestDto) {
   @IsEnum(PlaceCode)
   origin: PlaceCode;
+
   @IsEnum(PlaceCode)
   destination: PlaceCode;
+
   @IsOptional()
   @IsEnum(SortBy, { message: 'Invalid sort_by value, must be one of [cheapest, fastest]' })
   @Expose({ name: 'sort_by' })
   sortBy?: SortBy;
+
+  @IsOptional()
+  @IsEnum(TripType)
+  @Expose({ name: 'trip_type' })
+  tripType?: TripType;
 }
 
 export class SearchTripIntegrationResponseDto {

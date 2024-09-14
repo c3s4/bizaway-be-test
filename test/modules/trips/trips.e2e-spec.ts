@@ -59,7 +59,10 @@ describe('[Feature] Trips - /trips', () => {
       await request(app.getHttpServer()).get('/api/trips/search?origin=BCN&destination=').expect(400);
       await request(app.getHttpServer()).get('/api/trips/search?origin=wrong&destination=BCN').expect(400);
       await request(app.getHttpServer()).get('/api/trips/search?origin=&destination=BCN').expect(400);
+      await request(app.getHttpServer()).get('/api/trips/search?origin=BCN&destination=IST&sort_by=').expect(400);
       await request(app.getHttpServer()).get('/api/trips/search?origin=BCN&destination=IST&sort_by=wrong').expect(400);
+      await request(app.getHttpServer()).get('/api/trips/search?origin=BCN&destination=IST&trip_type=').expect(400);
+      await request(app.getHttpServer()).get('/api/trips/search?origin=BCN&destination=IST&trip_type=bus').expect(400);
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&sort_by=cheapest&page=0')
         .expect(400);
@@ -106,7 +109,11 @@ describe('[Feature] Trips - /trips', () => {
         .expect(200);
 
       await request(app.getHttpServer())
-        .get('/api/trips/search?origin=BCN&destination=IST&sort_by=fastest&page=1&items_per_page=10')
+        .get('/api/trips/search?origin=BCN&destination=IST&trip_type=flight')
+        .expect(200);
+
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=BCN&destination=IST&sort_by=fastest&trip_type=train&page=1&items_per_page=10')
         .expect(200);
 
       await request(app.getHttpServer())

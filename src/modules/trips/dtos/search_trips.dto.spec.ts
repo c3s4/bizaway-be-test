@@ -1,7 +1,7 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { SearchTripsRequestDto, SortBy } from './search_trips.dto';
-import { PlaceCode } from '../../../common/dtos/trip.enum';
+import { PlaceCode, TripType } from '../../../common/dtos/trip.enum';
 
 describe('Search trips DTO', () => {
   describe('search trip request', () => {
@@ -40,7 +40,16 @@ describe('Search trips DTO', () => {
       request = plainToInstance(SearchTripsRequestDto, {
         origin: 'BCN',
         destination: 'AMS',
+        trip_type: 'a string',
+      });
+      errors = await validate(request);
+      expect(errors.length).toBe(1);
+
+      request = plainToInstance(SearchTripsRequestDto, {
+        origin: 'BCN',
+        destination: 'AMS',
         sort_by: SortBy.CHEAPEST,
+        trip_type: TripType.FLIGHT,
       });
       errors = await validate(request);
       expect(errors.length).toBe(0);
