@@ -184,6 +184,45 @@ describe('TripsRepository', () => {
     });
   });
 
+  describe('getTripById', () => {
+    it('should throw not found exception', async () => {
+      const response = tripsRepository.getTripById('fake id');
+      expect(response).rejects.toThrow(NotFoundException);
+
+      const trip1 = new Trip({
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
+
+      await orm.em.persistAndFlush(trip1);
+
+      const response2 = tripsRepository.getTripById('fake id');
+      expect(response2).rejects.toThrow(NotFoundException);
+    });
+
+    it('should return a trip', async () => {
+      const trip1 = new Trip({
+        origin: PlaceCode.JFK,
+        destination: PlaceCode.LAX,
+        cost: 100,
+        duration: 10,
+        type: TripType.FLIGHT,
+        remoteId: '1',
+        displayName: 'Trip 1',
+      });
+
+      await orm.em.persistAndFlush(trip1);
+
+      const trip = await tripsRepository.getTripById(trip1.id);
+      expect(trip).toEqual(trip1);
+    });
+  });
+
   afterEach(async () => {
     await orm.schema.refreshDatabase();
     app.close();
