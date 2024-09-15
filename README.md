@@ -34,7 +34,7 @@ Before running the project you need some tools installed and some configurations
 You need this 2 tools installed and running in your machine. To install them you can follow the instructions in the following links:
 
 - [Docker](https://docs.docker.com/get-docker/)
-- [Docker Composer](https://docs.docker.com/compose/install/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
 Or, if you are on a Mac and you have `brew`, you can use the following commands:
 
@@ -132,7 +132,7 @@ To run the project, just type the following commands:
 
 ```bash
 pnpm install
-pnpm start
+pnpm start:dev
 ```
 
 This will start the server listening on the port you set in the `.env` file. The server will be ready when you see the following message in the console:
