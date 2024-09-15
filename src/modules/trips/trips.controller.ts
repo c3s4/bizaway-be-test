@@ -10,10 +10,11 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { SearchTripsListResponseDto, SearchTripsRequestDto } from './dtos/search_trips.dto';
+import { SearchTripResponseDto, SearchTripsListResponseDto, SearchTripsRequestDto } from './dtos/search_trips.dto';
 import { TripsService } from './service/trips.service';
 import { SaveTripRequestDto, SaveTripResponseDto } from './dtos/save_trip.dto';
 import { GetTripsListResponseDto, GetTripsRequestDto } from './dtos/get_trips.dto';
+import { ApiOkResponsePaginated } from '../../common/dtos/paged_results.dto';
 
 @Controller('trips')
 export class TripsController {
@@ -21,6 +22,7 @@ export class TripsController {
   constructor(private tripService: TripsService) {}
 
   @Get('/search')
+  @ApiOkResponsePaginated(SearchTripResponseDto)
   async searchTrips(@Query() searchParams: SearchTripsRequestDto): Promise<SearchTripsListResponseDto> {
     const foundTrips = await this.tripService.searchTripsFromIntegration(searchParams);
     if (foundTrips && searchParams.page && searchParams.page > 1 && foundTrips.totalPages < searchParams.page) {
@@ -35,6 +37,7 @@ export class TripsController {
   }
 
   @Get('/')
+  @ApiOkResponsePaginated(SaveTripResponseDto)
   async getTrips(@Query() getTripsParams?: GetTripsRequestDto): Promise<GetTripsListResponseDto> {
     return await this.tripService.getTrips(getTripsParams);
   }

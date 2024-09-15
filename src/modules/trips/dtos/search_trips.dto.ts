@@ -3,6 +3,7 @@ import { PagedRequestDto, PagedResponseDto } from '../../../common/dtos/paged_re
 import { Expose, Transform } from 'class-transformer';
 import { PartialType } from '@nestjs/mapped-types';
 import { PlaceCode, TripType } from '../../../common/dtos/trip.enum';
+import { ApiProperty } from '@nestjs/swagger';
 
 export enum SortBy {
   CHEAPEST = 'cheapest',
@@ -21,12 +22,14 @@ export class SearchTripsRequestDto extends PartialType(PagedRequestDto) {
   @IsOptional()
   @IsEnum(SortBy, { message: 'Invalid sort_by value, must be one of [cheapest, fastest]' })
   @Expose({ name: 'sort_by' })
+  @ApiProperty({ name: 'sort_by' })
   @Transform(({ value }) => value?.toLowerCase())
   sortBy?: SortBy;
 
   @IsOptional()
   @IsEnum(TripType)
   @Expose({ name: 'trip_type' })
+  @ApiProperty({ name: 'trip_type' })
   @Transform(({ value }) => value?.toLowerCase())
   tripType?: TripType;
 }
@@ -48,8 +51,10 @@ export class SearchTripResponseDto {
   duration: number;
   type: string;
   @Expose({ name: 'display_name' })
+  @ApiProperty({ name: 'display_name' })
   displayName: string;
   @Expose({ name: 'remote_id' })
+  @ApiProperty({ name: 'remote_id', format: 'uuid' })
   remoteId: string;
 
   constructor(trip: SearchTripResponseDto) {
