@@ -1,0 +1,224 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2024-09-15T14:47:37.513Z",
+  "__export_source": "insomnia.desktop.app:v10.0.0",
+  "resources": [
+    {
+      "_id": "req_0848592c5c974005ac06cd1dd21a3ee2",
+      "parentId": "wrk_5dec556dbafe4fe09f7b0ac8e8bcae5a",
+      "modified": 1726411420758,
+      "created": 1726230768208,
+      "url": "http://localhost:{{ _.hostPort }}/api/trips/search",
+      "name": "Search trips",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "id": "pair_05895f2783da4df6808a732eb2f35a49",
+          "name": "origin",
+          "value": "FRA",
+          "description": "",
+          "disabled": false
+        },
+        {
+          "id": "pair_c350f13a370a4590a24c212094fa0e56",
+          "name": "destination",
+          "value": "AMS",
+          "description": "",
+          "disabled": false
+        },
+        {
+          "id": "pair_c258d23130cd4c49b703ae4aaa3d8112",
+          "name": "sort_by",
+          "value": "cheapest",
+          "description": "",
+          "disabled": true
+        },
+        {
+          "id": "pair_d55d487c68b746d49808fc4017337ad9",
+          "name": "trip_type",
+          "value": "flight",
+          "description": "",
+          "disabled": true
+        },
+        {
+          "id": "pair_96cacea548db40cda50dd070972b4d08",
+          "name": "page",
+          "value": "2",
+          "description": "",
+          "disabled": true
+        },
+        {
+          "id": "pair_f966a587fb624be6b86f3bb81339dce4",
+          "name": "items_per_page",
+          "value": "2",
+          "description": "",
+          "disabled": true
+        }
+      ],
+      "headers": [{ "name": "User-Agent", "value": "insomnia/10.0.0" }],
+      "authentication": {},
+      "metaSortKey": -1726230768208,
+      "isPrivate": false,
+      "pathParameters": [],
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "wrk_5dec556dbafe4fe09f7b0ac8e8bcae5a",
+      "parentId": null,
+      "modified": 1725956992374,
+      "created": 1725956848002,
+      "name": "Custom BackEnd",
+      "description": "",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "req_e84edaa77da3464daf9f34af6443ac7c",
+      "parentId": "wrk_5dec556dbafe4fe09f7b0ac8e8bcae5a",
+      "modified": 1726406724998,
+      "created": 1725957701390,
+      "url": "localhost:{{ _.hostPort }}/api/trips/",
+      "name": "Save a trip",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"origin\": \"AMS\",\n\t\"destination\": \"BOM\",\n\t\"cost\": 1415,\n\t\"duration\": 41,\n\t\"type\": \"car\",\n\t\"remote_id\": \"911fef2b-fb91-455e-85c5-7129d214d5d5\",\n\t\"display_name\": \"from AMS to BOM by car\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "User-Agent", "value": "insomnia/9.3.3" }
+      ],
+      "authentication": {},
+      "metaSortKey": -1725957701390,
+      "isPrivate": false,
+      "pathParameters": [],
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_ee8114ff44c440f0b76bfd0a73bdd6d7",
+      "parentId": "wrk_5dec556dbafe4fe09f7b0ac8e8bcae5a",
+      "modified": 1726411556566,
+      "created": 1726296151205,
+      "url": "localhost:{{ _.hostPort }}/api/trips/",
+      "name": "Get trips list",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "id": "pair_8cb852f1e45d4d468b1246dfb30fb39f",
+          "name": "page",
+          "value": "2",
+          "description": "",
+          "disabled": true
+        },
+        {
+          "id": "pair_70e79403045143f98487b1b7e38913af",
+          "name": "items_per_page",
+          "value": "2",
+          "description": "",
+          "disabled": true
+        }
+      ],
+      "headers": [{ "name": "User-Agent", "value": "insomnia/9.3.3" }],
+      "authentication": {},
+      "metaSortKey": -1725955113618,
+      "isPrivate": false,
+      "pathParameters": [],
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_38336b48b06148ef81f90d4a7f8bc149",
+      "parentId": "wrk_5dec556dbafe4fe09f7b0ac8e8bcae5a",
+      "modified": 1726411501093,
+      "created": 1726384175090,
+      "url": "localhost:{{ _.hostPort }}/api/trips/66e44a4feeb9a912dd0ee463",
+      "name": "Get single trip",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [{ "name": "User-Agent", "value": "insomnia/9.3.3" }],
+      "authentication": {},
+      "metaSortKey": -1725953819732,
+      "isPrivate": false,
+      "pathParameters": [],
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_38d39e4f562a4b49ba3b0f095f0231a0",
+      "parentId": "wrk_5dec556dbafe4fe09f7b0ac8e8bcae5a",
+      "modified": 1726411565556,
+      "created": 1726384271037,
+      "url": "localhost:{{ _.hostPort }}/api/trips/66e451ad5a3505d072ca85b0",
+      "name": "Delete a trip",
+      "description": "",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [{ "name": "User-Agent", "value": "insomnia/9.3.3" }],
+      "authentication": {},
+      "metaSortKey": -1725953172789,
+      "isPrivate": false,
+      "pathParameters": [],
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "env_8bb7fbab24d29fd81dd4c7acd729813f495801e1",
+      "parentId": "wrk_5dec556dbafe4fe09f7b0ac8e8bcae5a",
+      "modified": 1726384241870,
+      "created": 1725956848010,
+      "name": "Base Environment",
+      "data": { "hostPort": 3000 },
+      "dataPropertyOrder": { "&": ["hostPort"] },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1725956848010,
+      "_type": "environment"
+    },
+    {
+      "_id": "jar_8bb7fbab24d29fd81dd4c7acd729813f495801e1",
+      "parentId": "wrk_5dec556dbafe4fe09f7b0ac8e8bcae5a",
+      "modified": 1725956848011,
+      "created": 1725956848011,
+      "name": "Default Jar",
+      "cookies": [],
+      "_type": "cookie_jar"
+    }
+  ]
+}
