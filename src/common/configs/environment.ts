@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsNumber, IsOptional, IsString, IsUrl, Max, Min, validateSync } from 'class-validator';
+import { IsNumber, IsOptional, IsPositive, IsString, IsUrl, Max, Min, validateSync } from 'class-validator';
 
 class EnvironmentData {
   @IsNumber()
@@ -37,6 +37,10 @@ class EnvironmentData {
   @Max(65535)
   @IsOptional()
   REDIS_PORT: number;
+
+  @IsPositive()
+  @IsOptional()
+  REDIS_CACHE_DURATION_SECONDS: number;
 }
 export class EnvironmentObject {
   serverPort: number;
@@ -48,8 +52,9 @@ export class EnvironmentObject {
     url: string;
   };
   redis?: {
-    host: string;
-    port: number;
+    host?: string;
+    port?: number;
+    cacheDuration?: number;
   };
 }
 
@@ -64,7 +69,7 @@ export function validateEnv(config: Record<string, unknown>) {
 }
 
 export const envConfig = (): EnvironmentObject => ({
-  serverPort: parseInt(process.env.SERVER_PORT, 10) || 3000,
+  serverPort: parseInt(process.env.SERVER_PORT) || 3000,
   plannerApi: {
     url: process.env.PLANNER_API_URL,
     key: process.env.PLANNER_API_KEY,
@@ -74,6 +79,7 @@ export const envConfig = (): EnvironmentObject => ({
   },
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT, 10) || 6379,
+    port: parseInt(process.env.REDIS_PORT) || 6379,
+    cacheDuration: parseInt(process.env.REDIS_CACHE_DURATION_SECONDS),
   },
 });
