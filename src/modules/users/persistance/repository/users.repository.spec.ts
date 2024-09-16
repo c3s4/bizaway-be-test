@@ -1,4 +1,4 @@
-import { MikroORM, NotFoundError } from '@mikro-orm/mongodb';
+import { MikroORM } from '@mikro-orm/mongodb';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -25,7 +25,11 @@ describe('UsersRepository', () => {
             }),
           ],
           inject: [ConfigService],
-          useFactory: (configService: ConfigService) => dbConfig(configService, true),
+          useFactory: (configService: ConfigService) => ({
+            ...dbConfig(configService, true),
+            entities: ['./dist/**/user.entity*.js'],
+            entitiesTs: ['./src/**/user.entity*.ts'],
+          }),
         }),
       ],
       providers: [UsersRepository],
