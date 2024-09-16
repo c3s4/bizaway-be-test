@@ -18,10 +18,10 @@ This project is a backend test for BizAway. It provides a set of APIs to demonst
   - [3.1.3. GET /api/trips/](#313-get-apitrips)
   - [3.1.4. GET /api/trips/:id](#314-get-apitripsid)
   - [3.1.5. DELETE /api/trips/:id](#315-delete-apitripsid)
-- [Assumptions](#assumptions)
 - [Bonus](#bonus)
   - [Caching](#caching)
   - [Authentication](#authentication)
+- [Assumptions](#assumptions)
 
 ---
 
@@ -60,6 +60,10 @@ MONGO_ADMIN_USER=bizAway_BE_test_user
 MONGO_ADMIN_PASSWORD=bizAway_BE_test_psw
 MONGO_DB_NAME=bizAway
 
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_CACHE_DURATION_SECONDS=90
+
 DATABASE_URL=mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASSWORD}@localhost:${MONGO_LOCAL_PORT}/${MONGO_DB_NAME}?authSource=admin
 ```
 
@@ -71,6 +75,11 @@ DATABASE_URL=mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASSWORD}@localhost:${M
 - The `MONGO_ADMIN_PASSWORD` is the password to access the mongo db.
 - The `MONGO_DB_NAME` is the name of the database in the mongo db.
 - The `DATABASE_URL` is the URL to access the mongo db, this does not need to be changed.
+- The `REDIS_HOST` is the host where the redis server is running.
+- The `REDIS_PORT` is the port where the redis server is running.
+- The `REDIS_CACHE_DURATION_SECONDS` is the duration in seconds to cache the results from the 3rd party API.
+
+> ⚠️ **Note**: The `REDIS_*` variables are for the caching mechanism ([see bonus section](#bonus)).
 
 ### 1.3. [_Optional_] Node.js and package manager
 
@@ -334,6 +343,26 @@ The request url should be like this, using the `DELETE` http method:
 http://localhost:3000/api/trips/66e44a6da35a23c8453b9d60
 ```
 
+## Bonus
+
+To improve the project adding some interesting features, I implemented the following:
+
+### Caching
+
+Considering that the 3rd party API could be slow or could have a rate limit, I decided to implement a caching mechanism to improve the performance of the search endpoint. I implemented a simple cache system using Redis.
+
+Because I don't have a lot of information about the 3rd party API, I decided to implement a simple caching mechanism based on time. The idea is to cache the results for a TTL configurable by `.env` file. The cache is invalidated when the TTL expires.
+
+The cache is used only in the search endpoint.
+
+### Authentication
+
+I implemented a simple authentication system using JWT. To use the endpoints, you need to provide a token in the `Authorization` header.
+
+This way all the endpoints are protected by the authentication system and the saved trips are associated with the user that created them.
+
+To see the authentication implementation, just switch to the `feature/auth` branch. There we'll be this same readme with all the needed information and assumptions.
+
 ## Assumptions
 
 Here some assumptions and compromise I made during the development of the project:
@@ -348,24 +377,4 @@ Here some assumptions and compromise I made during the development of the projec
 
 - The `id` field in the response from the 3rd party API has been remapped to `remote_id` in the response provided, to be consistent with other endpoints. We use the `id` filed referring to _our_ data.
 
-## Bonus
-
-To improve the project and some interesting features, I implemented the following:
-
-### Caching
-
-To avoid making the same request to the 3rd party API multiple times, I implemented a simple cache system using Redis.
-
-Because I don't have a lot of information about the 3rd party API, I decided to implement a simple caching mechanism based on time. The idea is to cache the results for a TTL configurable by `.env` file. The cache is invalidated when the TTL expires.
-
-To see the cache implementation, just switch to the `feature/cache` branch. There we'll be this same readme with all the needed information and assumptions.
-
-The cache is used only in the search endpoint.
-
-### Authentication
-
-I implemented a simple authentication system using JWT. To use the endpoints, you need to provide a token in the `Authorization` header.
-
-This way all the endpoints are protected by the authentication system and the saved trips are associated with the user that created them.
-
-To see the authentication implementation, just switch to the `feature/auth` branch. There we'll be this same readme with all the needed information and assumptions.
+- The caching mechanism is based on time, so the results are cached for a configurable amount of time. Each cached record is simply the 3rd party trips list stringified, using origin and destination codes as key.
