@@ -11,6 +11,7 @@ import { MikroORM } from '@mikro-orm/mongodb';
 import { Trip } from '../../../src/modules/trips/persistance/entites/trip.entity';
 import { PlaceCode, TripType } from '../../../src/common/dtos/trip.enum';
 import { PAGINATION } from '../../../src/common/configs/constants';
+import { RedisModule } from '../../../src/modules/redis/redis.module';
 
 describe('[Feature] Trips - /trips', () => {
   let app: INestApplication;
@@ -37,6 +38,17 @@ describe('[Feature] Trips - /trips', () => {
           useFactory: (configService: ConfigService) => dbConfig(configService, true),
         }),
         TripsModule,
+        RedisModule.registerAsync({
+          isGlobal: true,
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: (configService: ConfigService) => {
+            return {
+              host: configService.get('redis.host'),
+              port: configService.get('redis.port'),
+            };
+          },
+        }),
       ],
     }).compile();
 
