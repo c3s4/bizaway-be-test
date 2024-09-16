@@ -1,28 +1,47 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RedisService } from './redis.service';
-import { RedisClientType } from 'redis';
+import { REDIS_OPTIONS } from '../redis.module_definition';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { envConfig, validateEnv } from '../../../common/configs/environment';
+import { createClient, RedisClientType } from 'redis';
 
 describe('RedisService', () => {
+  let module: TestingModule;
   let service: RedisService;
-  let redisClient: RedisClientType;
+  let redisDirectClient: RedisClientType;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
+      imports: [
+        ConfigModule.forRoot({
+          load: [envConfig],
+          envFilePath: '.env.test.local',
+          expandVariables: true,
+          validate: validateEnv,
+        }),
+      ],
       providers: [
         RedisService,
         {
-          provide: 'REDIS_CLIENT',
-          useValue: {
-            connect: jest.fn().mockResolvedValue(undefined),
-            get: jest.fn().mockResolvedValue('value'),
-            set: jest.fn().mockResolvedValue(undefined),
+          inject: [ConfigService],
+          provide: REDIS_OPTIONS,
+          useFactory: (configService: ConfigService) => {
+            return {
+              host: configService.get('redis.host'),
+              port: configService.get('redis.port'),
+            };
           },
         },
       ],
     }).compile();
 
     service = module.get<RedisService>(RedisService);
-    redisClient = module.get<RedisClientType>('REDIS_CLIENT');
+    const configService = module.get<ConfigService>(ConfigService);
+    redisDirectClient = createClient({
+      url: `redis://@${configService.get('redis.host')}:${configService.get('redis.port')}`,
+    });
+    await redisDirectClient.connect();
+    await redisDirectClient.flushAll();
   });
 
   it('should be defined', () => {
@@ -30,23 +49,43 @@ describe('RedisService', () => {
   });
 
   it('should get value from redis', async () => {
+    await redisDirectClient.set('key', 'value');
     const value = await service.getSerializableValue('key');
     expect(value).toBe('value');
   });
 
   it('should get null from redis', async () => {
-    redisClient.get = jest.fn().mockResolvedValue(null);
     const value = await service.getSerializableValue('fake-key');
     expect(value).toBe(null);
   });
 
   it('should set value in redis', async () => {
     await service.setSerializableValue('key', 'value');
-    expect(redisClient.set).toHaveBeenCalledWith('key', 'value', undefined);
+
+    const value = await redisDirectClient.get('key');
+    expect(value).toBe('value');
   });
 
   it('should set value in redis with expiration', async () => {
-    await service.setSerializableValue('key', 'value', 60);
-    expect(redisClient.set).toHaveBeenCalledWith('key', 'value', { EX: 60 });
+    await service.setSerializableValue('key', 'value', 1);
+    const value = await redisDirectClient.get('key');
+    expect(value).toBe('value');
+
+    const expirationPromise = () =>
+      new Promise((resolve) => {
+        setTimeout(async () => {
+          const value = await redisDirectClient.get('key');
+          resolve(value);
+        }, 2000);
+      });
+
+    const result = await expirationPromise();
+    expect(result).toBe(null);
+  });
+
+  afterEach(async () => {
+    await redisDirectClient.flushAll();
+    await redisDirectClient.disconnect();
+    module.close();
   });
 });

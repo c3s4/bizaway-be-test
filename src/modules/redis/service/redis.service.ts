@@ -1,21 +1,24 @@
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { RedisClientType } from 'redis';
+import { Inject, Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
+import { createClient, RedisClientType } from 'redis';
+import { REDIS_OPTIONS, RedisConfig } from '../redis.module_definition';
 
-export const REDIS_CLIENT = 'REDIS_CLIENT';
-
-export interface RedisConfig {
-  host: string;
-  port: number;
-}
+// export const REDIS_CLIENT = 'REDIS_CLIENT';
 
 @Injectable()
-export class RedisService implements OnModuleInit {
+export class RedisService implements OnApplicationShutdown {
   private logger = new Logger(RedisService.name);
-  constructor(@Inject(REDIS_CLIENT) private readonly redisClient: RedisClientType) {}
+  private redisClient: RedisClientType;
+  constructor(@Inject(REDIS_OPTIONS) private readonly redisOptions: RedisConfig) {
+    this.redisClient = createClient({
+      url: `redis://@${this.redisOptions.host}:${this.redisOptions.port}`,
+    });
+    this.redisClient.on('error', (err) => this.logger.error('Redis Client Error', err));
+    this.redisClient.connect().then(() => this.logger.log('Redis client connected'));
+  }
 
-  async onModuleInit() {
-    await this.redisClient.connect();
-    this.logger.log('Redis client connected');
+  async onApplicationShutdown() {
+    await this.redisClient.disconnect();
+    this.logger.log('Redis client disconnected');
   }
 
   async getSerializableValue(key: string): Promise<string | null> {
