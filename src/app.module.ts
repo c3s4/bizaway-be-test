@@ -5,6 +5,7 @@ import { envConfig, validateEnv } from './common/configs/environment';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { dbConfig } from './common/configs/mikro_orm.config';
 import { RedisModule } from './modules/redis/redis.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { RedisModule } from './modules/redis/redis.module';
         };
       },
     }),
+    UsersModule,
   ],
 })
 export class AppModule {}
