@@ -12,6 +12,15 @@ services:
     networks:
       - test-network
   
+  redis-test:
+    image: redis/redis-stack-server
+    container_name: redis-test
+    restart: unless-stopped
+    ports:
+      - ${REDIS_PORT}:6379
+    networks:
+      - test-network
+  
 networks:
   test-network:
   

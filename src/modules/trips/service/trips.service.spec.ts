@@ -12,6 +12,7 @@ import { SaveTripResponseDto } from '../dtos/save_trip.dto';
 import { PAGINATION } from '../../../common/configs/constants';
 import { GetTripsListResponseDto } from '../dtos/get_trips.dto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { RedisService } from '../../redis/service/redis.service';
 
 const mockTripsList: SearchTripIntegrationResponseDto[] = [
   {
@@ -101,6 +102,7 @@ describe('TripsService', () => {
   let httpService: HttpService;
   let configService: ConfigService;
   let tripsRepository: TripsRepository;
+  let redisService: RedisService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -129,6 +131,13 @@ describe('TripsService', () => {
             getTripById: jest.fn().mockResolvedValue(mockSavedTrips[0]),
           }),
         },
+        {
+          provide: RedisService,
+          useValue: {
+            getSerializableValue: jest.fn().mockResolvedValue(null),
+            setSerializableValue: jest.fn().mockResolvedValue(undefined),
+          },
+        },
       ],
     }).compile();
 
@@ -136,6 +145,7 @@ describe('TripsService', () => {
     httpService = module.get<HttpService>(HttpService);
     configService = module.get<ConfigService>(ConfigService);
     tripsRepository = module.get<TripsRepository>(TripsRepository);
+    redisService = module.get<RedisService>(RedisService);
   });
 
   it('should be defined', () => {
@@ -402,6 +412,53 @@ describe('TripsService', () => {
       expect(tripsList.totalPages).toEqual(2);
       expect(tripsList.totalItems).toEqual(2);
       expect(tripsList.itemsPerPage).toEqual(1);
+    });
+
+    it('should be retrieve trips from cache', async () => {
+      redisService.getSerializableValue = jest.fn().mockResolvedValue(JSON.stringify(mockTripsList));
+      const tripsList = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+      });
+
+      expect(tripsList.items).toHaveLength(mockTripsList.length);
+      expect(tripsList.items[0]).toEqual({
+        origin: mockTripsList[0].origin,
+        destination: mockTripsList[0].destination,
+        cost: mockTripsList[0].cost,
+        duration: mockTripsList[0].duration,
+        type: mockTripsList[0].type,
+        remoteId: mockTripsList[0].id,
+        displayName: mockTripsList[0].display_name,
+      });
+
+      expect(redisService.getSerializableValue).toHaveBeenCalledWith('AMS-FRA');
+      expect(httpService.get).not.toHaveBeenCalled();
+      expect(redisService.setSerializableValue).not.toHaveBeenCalled();
+    });
+
+    it('should save trips to cache', async () => {
+      await tripsService.searchTripsFromIntegration({ origin: PlaceCode.AMS, destination: PlaceCode.FRA });
+      expect(redisService.setSerializableValue).toHaveBeenCalledWith(
+        'AMS-FRA',
+        JSON.stringify(mockTripsList),
+        configService.get('redis.cacheDuration') || undefined,
+      );
+    });
+
+    it('should work if caching throws an error', async () => {
+      redisService.getSerializableValue = jest.fn().mockRejectedValue(new Error());
+      redisService.setSerializableValue = jest.fn().mockRejectedValue(new Error());
+
+      const trips = await tripsService.searchTripsFromIntegration({
+        origin: PlaceCode.AMS,
+        destination: PlaceCode.FRA,
+      });
+      expect(redisService.getSerializableValue).toHaveBeenCalledWith('AMS-FRA');
+      expect(httpService.get).toHaveBeenCalled();
+      expect(redisService.setSerializableValue).toHaveBeenCalled();
+
+      expect(trips.items).toHaveLength(mockTripsList.length);
     });
   });
 

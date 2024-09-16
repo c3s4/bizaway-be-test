@@ -12,5 +12,15 @@ services:
     networks:
       - dev-network
   
+  redis:
+    image: redis/redis-stack
+    container_name: redis-dev
+    restart: unless-stopped
+    ports:
+      - 8001:8001
+      - ${REDIS_PORT}:6379
+    networks:
+      - dev-network
+  
 networks:
   dev-network:

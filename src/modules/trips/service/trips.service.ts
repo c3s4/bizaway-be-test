@@ -13,6 +13,7 @@ import { PAGINATION } from '../../../common/configs/constants';
 import { SaveTripRequestDto, SaveTripResponseDto } from '../dtos/save_trip.dto';
 import { TripsRepository } from '../persistance/repository/trips.repository';
 import { GetTripsListResponseDto, GetTripsRequestDto } from '../dtos/get_trips.dto';
+import { RedisService } from '../../redis/service/redis.service';
 
 @Injectable()
 export class TripsService {
@@ -21,6 +22,7 @@ export class TripsService {
     private readonly httpService: HttpService,
     private configService: ConfigService,
     private tripsRepository: TripsRepository,
+    private redisService: RedisService,
   ) {}
 
   async searchTripsFromIntegration(searchParams: SearchTripsRequestDto): Promise<SearchTripsListResponseDto> {
@@ -33,27 +35,53 @@ export class TripsService {
       tripType,
     } = searchParams;
 
-    const response = await lastValueFrom(
-      this.httpService
-        .get<SearchTripIntegrationResponseDto[]>(
-          `${this.configService.get('plannerApi.url')}?origin=${origin}&destination=${destination}`,
-          {
-            headers: {
-              'x-api-key': this.configService.get('plannerApi.key'),
+    let tripsList: SearchTripIntegrationResponseDto[];
+
+    const cacheKey = `${origin}-${destination}`;
+    let cachedTrips: string | null = null;
+
+    try {
+      cachedTrips = await this.redisService.getSerializableValue(cacheKey);
+    } catch (error) {
+      this.logger.error(error);
+    }
+
+    if (cachedTrips) {
+      tripsList = JSON.parse(cachedTrips);
+    } else {
+      const response = await lastValueFrom(
+        this.httpService
+          .get<SearchTripIntegrationResponseDto[]>(
+            `${this.configService.get('plannerApi.url')}?origin=${origin}&destination=${destination}`,
+            {
+              headers: {
+                'x-api-key': this.configService.get('plannerApi.key'),
+              },
             },
-          },
-        )
-        .pipe(
-          catchError((error: any) => {
-            this.logger.error(error.response.data);
-            throw new InternalServerErrorException('Error connecting to external API');
-          }),
-        ),
-    );
+          )
+          .pipe(
+            catchError((error: any) => {
+              this.logger.error(error);
+              throw new InternalServerErrorException('Error connecting to external API');
+            }),
+          ),
+      );
+      this.logger.log(`Successfully fetched trips from external API. Trips count: ${response.data.length}`);
 
-    this.logger.log(`Successfully fetched trips from external API. Trips count: ${response.data.length}`);
+      tripsList = response.data;
 
-    let remappedResponse = response.data.map<SearchTripResponseDto>((trip) => {
+      try {
+        await this.redisService.setSerializableValue(
+          cacheKey,
+          JSON.stringify(tripsList),
+          this.configService.get('redis.cacheDuration') || undefined,
+        );
+      } catch (error) {
+        this.logger.error(error);
+      }
+    }
+
+    let remappedResponse = tripsList.map<SearchTripResponseDto>((trip) => {
       const singleTrip = new SearchTripResponseDto({
         origin: trip.origin,
         destination: trip.destination,
