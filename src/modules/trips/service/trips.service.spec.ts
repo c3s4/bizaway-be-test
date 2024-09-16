@@ -13,6 +13,7 @@ import { PAGINATION } from '../../../common/configs/constants';
 import { GetTripsListResponseDto } from '../dtos/get_trips.dto';
 import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { RedisService } from '../../redis/service/redis.service';
+import { NotFoundError } from '@mikro-orm/core';
 
 const mockTripsList: SearchTripIntegrationResponseDto[] = [
   {
@@ -561,7 +562,7 @@ describe('TripsService', () => {
     });
 
     it('should throw not found exception', async () => {
-      tripsRepository.deleteTripById = jest.fn().mockRejectedValue(new NotFoundException());
+      tripsRepository.deleteTripById = jest.fn().mockRejectedValue(new NotFoundError(`Trip with id fake id not found`));
       const promise = tripsService.deleteTripById('fake id');
       expect(promise).rejects.toThrow(NotFoundException);
       expect(tripsRepository.deleteTripById).toHaveBeenCalledWith('fake id');
@@ -587,7 +588,7 @@ describe('TripsService', () => {
     });
 
     it('should throw not found exception', async () => {
-      tripsRepository.getTripById = jest.fn().mockRejectedValue(new NotFoundException());
+      tripsRepository.getTripById = jest.fn().mockRejectedValue(new NotFoundError(`Trip with id fake id not found`));
       const promise = tripsService.getTripById('fake id');
       expect(promise).rejects.toThrow(NotFoundException);
       expect(tripsRepository.getTripById).toHaveBeenCalledWith('fake id');
