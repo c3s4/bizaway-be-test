@@ -4,24 +4,7 @@ This project is a backend test for BizAway. It provides a set of APIs to demonst
 
 ## Table of Contents
 
-- [1. Requirements](#1-requirements)
-  - [1.1. Docker and Docker Compose](#11-docker-and-docker-compose)
-  - [1.2. Prepare .env](#12-prepare-env)
-  - [1.3. [_Optional_] Node.js and package manager](#13-optional-nodejs-and-package-manager)
-- [2. How to Run](#2-how-to-run)
-  - [2.1. Method 1: Using Docker (preferred)](#21-method-1-using-docker-preferred)
-  - [2.2. Method 2: Using pnpm](#22-method-2-using-pnpm)
-  - [2.3. Method 3: Running Tests](#23-method-3-running-tests)
-- [3. How to Use](#3-how-to-use)
-  - [3.1. GET /api/trips/search](#31-get-apitripssearch)
-  - [3.1.2. POST /api/trips/](#312-post-apitrips)
-  - [3.1.3. GET /api/trips/](#313-get-apitrips)
-  - [3.1.4. GET /api/trips/:id](#314-get-apitripsid)
-  - [3.1.5. DELETE /api/trips/:id](#315-delete-apitripsid)
-- [Bonus](#bonus)
-  - [Caching](#caching)
-  - [Authentication](#authentication)
-- [Assumptions](#assumptions)
+[TOC]
 
 ---
 
@@ -65,6 +48,11 @@ REDIS_PORT=6379
 REDIS_CACHE_DURATION_SECONDS=90
 
 DATABASE_URL=mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASSWORD}@localhost:${MONGO_LOCAL_PORT}/${MONGO_DB_NAME}?authSource=admin
+
+JWT_SECRET=YOUR_SECRET_KEY_HERE
+JWT_TOKEN_AUDIENCE=localhost:3000
+JWT_TOKEN_ISSUER=localhost:3000
+JWT_ACCESS_TOKEN_TTL=3600
 ```
 
 - The `SERVER_PORT` is the port where the server will listen.
@@ -78,8 +66,14 @@ DATABASE_URL=mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASSWORD}@localhost:${M
 - The `REDIS_HOST` is the host where the redis server is running.
 - The `REDIS_PORT` is the port where the redis server is running.
 - The `REDIS_CACHE_DURATION_SECONDS` is the duration in seconds to cache the results from the 3rd party API.
+- The `JWT_SECRET` is the secret key to generate the JWT token. For the purpose of the test, you can leave it as it is.
+- The `JWT_TOKEN_AUDIENCE` is the audience of the JWT token.
+- The `JWT_TOKEN_ISSUER` is the issuer of the JWT token.
+- The `JWT_ACCESS_TOKEN_TTL` is the time to live of the JWT token.
 
 > ⚠️ **Note**: The `REDIS_*` variables are for the caching mechanism ([see bonus section](#bonus)).
+
+> ⚠️ **Note**: The `JWT*` variables are for the authentication system ([see bonus section](#bonus)).
 
 ### 1.3. [_Optional_] Node.js and package manager
 
@@ -167,6 +161,11 @@ MONGO_ADMIN_PASSWORD=biz-test-psw
 MONGO_DB_NAME=bizAway-test
 
 DATABASE_URL=mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASSWORD}@localhost:${MONGO_LOCAL_PORT}/${MONGO_DB_NAME}?authSource=admin
+
+JWT_SECRET=YOUR_SECRET_KEY_HERE
+JWT_TOKEN_AUDIENCE=localhost:3000
+JWT_TOKEN_ISSUER=localhost:3000
+JWT_ACCESS_TOKEN_TTL=3600
 ```
 
 Just note that the `SERVER_PORT` should be different from the one you set in the `.env` file, in case you are running the server at the same time.
@@ -198,7 +197,9 @@ You can use any API client to test the endpoints, like Postman or Insomnia. In c
 
 Anyway, here are all the endpoints and its descriptions:
 
-### 3.1. GET /api/trips/search
+### 3.1. Trips resource
+
+#### 3.1.1. GET /api/trips/search
 
 This endpoint is responsible to search trips based on the parameters you provide. The parameters are:
 
@@ -237,7 +238,7 @@ The response will be a list of trips, like this one:
 }
 ```
 
-### 3.1.2. POST /api/trips/
+#### 3.1.2. POST /api/trips/
 
 This endpoint is responsible to save a trip. The body of the request should be like this:
 
@@ -264,7 +265,7 @@ All the fields are mandatory:
 
 You have to set the content type of the request to `application/json`.
 
-### 3.1.3. GET /api/trips/
+#### 3.1.3. GET /api/trips/
 
 This endpoint is responsible to list all the saved trips. The url parameters are:
 
@@ -310,7 +311,7 @@ It'll return a list of trips like this:
 }
 ```
 
-### 3.1.4. GET /api/trips/:id
+#### 3.1.4. GET /api/trips/:id
 
 This is a simple endpoint to get a trip by its `id`. The request url should be like this:
 
@@ -333,7 +334,7 @@ The response will be like this:
 }
 ```
 
-### 3.1.5. DELETE /api/trips/:id
+#### 3.1.5. DELETE /api/trips/:id
 
 To delete a trip, you can use this endpoint. Just use the `id` as a parameter in the URL. The response will be an empty response with status code 204.
 
@@ -341,6 +342,59 @@ The request url should be like this, using the `DELETE` http method:
 
 ```bash
 http://localhost:3000/api/trips/66e44a6da35a23c8453b9d60
+```
+
+##### Authentication
+
+Given the purpose of the test, the endpoints are not protected by an authentication system. The only endpoint under authentication is this one. So to delete a previously saved trip, you need to provide a valid JWT token in the `Authorization` header.
+
+The approach is the classic Bearer token, so you have to provide the token in the header like this:
+
+```
+Authorization: Bearer <your_token_here>
+```
+
+To get the token you have to call [the `login` endpoint](#322-post-apiauthlogin), providing the credentials in the body of the request. When you run this app for the first time, no user is created, so you have to create one. You can use [the `register` endpoint](#321-post-apiauthregister).
+
+### 3.2 Authentication resource
+
+#### 3.2.1. POST /api/auth/register
+
+This endpoint is responsible to register a new user. The body of the request should be like this:
+
+```json
+{
+  "email": "exampl@email.com",
+  "password": "password"
+}
+```
+
+The response will have a 201 as status code and the body will be something like this:
+
+```json
+{
+  "id": "66e44a6da35a23c8453b9d60",
+  "email": "exampl@email.com"
+}
+```
+
+#### 3.2.2. POST /api/auth/login
+
+This endpoint is responsible to login a user. The body of the request should be like this:
+
+```json
+{
+  "email": "exampl@email.com",
+  "password": "password"
+}
+```
+
+The response will have a 200 as status code and the body will contain the JWT token, to use in the [delete endpoint](#315-delete-apitripsid):
+
+```json
+{
+  "accessToken": "eyJhbGciOiJI....."
+}
 ```
 
 ## Bonus
@@ -357,19 +411,15 @@ The cache is used only in the search endpoint.
 
 ### Authentication
 
-I implemented a simple authentication system using JWT. To use the endpoints, you need to provide a token in the `Authorization` header.
-
-This way all the endpoints are protected by the authentication system and the saved trips are associated with the user that created them.
-
-To see the authentication implementation, just switch to the `feature/auth` branch. There we'll be this same readme with all the needed information and assumptions.
+I implemented a simple authentication system using JWT. The authentication is only for the delete endpoint and the users management is the minimum needed to make the system work. In the assumption section below, you can find more information about the limitation of this part.
 
 ## Assumptions
 
 Here some assumptions and compromise I made during the development of the project:
 
-- Because of no documentation about the thirdy party API and because of some test requests I made, I assumed that results from the are not paginated.
+- Because of some test requests I made on the thirdy party API, I assumed that results are not paginated.
 
-  - I have anyway implemented the pagination in the search endpoint. In this scenario is not useful but in case of a real API it would be. Maybe could be useful with cached external requests ([see bonus section](#bonus)).
+  - I have anyway implemented the pagination in the search endpoint. In this scenario is not useful but in case of a real API it would be.
 
 - In case of exception from the 3rd party API, I assumed that the response is a 500 status code with a message in the body, explaining that the error is from the 3rd party API.
 
@@ -378,3 +428,7 @@ Here some assumptions and compromise I made during the development of the projec
 - The `id` field in the response from the 3rd party API has been remapped to `remote_id` in the response provided, to be consistent with other endpoints. We use the `id` filed referring to _our_ data.
 
 - The caching mechanism is based on time, so the results are cached for a configurable amount of time. Each cached record is simply the 3rd party trips list stringified, using origin and destination codes as key.
+
+- For the authentication feature, I assumed that the user management is the minimum needed to make the system work. So, I implemented only the register and login endpoints. Regarding the authentication, I protected only the delete endpoint, and for the token is not available a refresh token mechanism.
+
+- Despite the users management, I didn't add owners to the trips. So, any user can see and delete any trip.

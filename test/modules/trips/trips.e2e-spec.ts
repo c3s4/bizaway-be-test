@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { envConfig, validateEnv } from '../../../src/common/configs/environment';
@@ -12,10 +12,14 @@ import { Trip } from '../../../src/modules/trips/persistance/entites/trip.entity
 import { PlaceCode, TripType } from '../../../src/common/dtos/trip.enum';
 import { PAGINATION } from '../../../src/common/configs/constants';
 import { RedisModule } from '../../../src/modules/redis/redis.module';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { User } from '../../../src/modules/users/persistance/entities/user.entity';
 
 describe('[Feature] Trips - /trips', () => {
   let app: INestApplication;
   let orm: MikroORM;
+  let jwtService: JwtService;
+  let configService: ConfigService;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -35,7 +39,24 @@ describe('[Feature] Trips - /trips', () => {
             }),
           ],
           inject: [ConfigService],
-          useFactory: (configService: ConfigService) => dbConfig(configService, true),
+          useFactory: (configService: ConfigService) => ({
+            ...dbConfig(configService, true),
+          }),
+        }),
+        JwtModule.registerAsync({
+          global: true,
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: (configService: ConfigService) => {
+            return {
+              secret: configService.get('jwt.secret'),
+              signOptions: {
+                expiresIn: configService.get('jwt.accessTokenTtl'),
+                issuer: configService.get('jwt.issuer'),
+                audience: configService.get('jwt.audience'),
+              },
+            };
+          },
         }),
         TripsModule,
         RedisModule.registerAsync({
@@ -54,6 +75,8 @@ describe('[Feature] Trips - /trips', () => {
 
     app = moduleFixture.createNestApplication();
     orm = app.get<MikroORM>(MikroORM);
+    jwtService = moduleFixture.get<JwtService>(JwtService);
+    configService = moduleFixture.get<ConfigService>(ConfigService);
     configureApp(app);
 
     await app.init();
@@ -62,43 +85,63 @@ describe('[Feature] Trips - /trips', () => {
 
   describe('GET /search', () => {
     it('should fail because of not valid data', async () => {
-      await request(app.getHttpServer()).get('/api/trips/search').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=wrong').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=&destination=').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=wrong&destination=wrong').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=&destination=wrong').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=BCN&destination=wrong').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=BCN&destination=').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=wrong&destination=BCN').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=&destination=BCN').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=BCN&destination=IST&sort_by=').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=BCN&destination=IST&sort_by=wrong').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=BCN&destination=IST&trip_type=').expect(400);
-      await request(app.getHttpServer()).get('/api/trips/search?origin=BCN&destination=IST&trip_type=bus').expect(400);
+      await request(app.getHttpServer()).get('/api/trips/search').expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer()).get('/api/trips/search?origin=wrong').expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer()).get('/api/trips/search?origin=&destination=').expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=wrong&destination=wrong')
+        .expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=&destination=wrong')
+        .expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=BCN&destination=wrong')
+        .expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=BCN&destination=')
+        .expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=wrong&destination=BCN')
+        .expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=&destination=BCN')
+        .expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=BCN&destination=IST&sort_by=')
+        .expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=BCN&destination=IST&sort_by=wrong')
+        .expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=BCN&destination=IST&trip_type=')
+        .expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer())
+        .get('/api/trips/search?origin=BCN&destination=IST&trip_type=bus')
+        .expect(HttpStatus.BAD_REQUEST);
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&sort_by=cheapest&page=0')
-        .expect(400);
+        .expect(HttpStatus.BAD_REQUEST);
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&sort_by=cheapest&page=-1')
-        .expect(400);
+        .expect(HttpStatus.BAD_REQUEST);
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&sort_by=cheapest&items_per_page=0')
-        .expect(400);
+        .expect(HttpStatus.BAD_REQUEST);
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&sort_by=cheapest&items_per_page=-1')
-        .expect(400);
+        .expect(HttpStatus.BAD_REQUEST);
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&sort_by=cheapest&page=')
-        .expect(400);
+        .expect(HttpStatus.BAD_REQUEST);
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&sort_by=cheapest&items_per_page=')
-        .expect(400);
+        .expect(HttpStatus.BAD_REQUEST);
     });
 
     it('should complete successfully', async () => {
       const response = await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST')
-        .expect(200);
+        .expect(HttpStatus.OK);
       expect(response.body).toHaveProperty('current_page');
       expect(response.body).toHaveProperty('total_pages');
       expect(response.body).toHaveProperty('total_items');
@@ -118,27 +161,27 @@ describe('[Feature] Trips - /trips', () => {
 
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&sort_by=fastest')
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&trip_type=flight')
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=bcn&destination=ist&trip_type=flight')
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=BCN&destination=IST&sort_by=fastest&trip_type=train&page=1&items_per_page=10')
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=IST&destination=IST&sort_by=fastest&page=1&items_per_page=10')
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       await request(app.getHttpServer())
         .get('/api/trips/search?origin=bcn&destination=ist&sort_by=FAStest&trip_type=trAIN&page=1&items_per_page=10')
-        .expect(200);
+        .expect(HttpStatus.OK);
     });
   });
 
@@ -155,10 +198,10 @@ describe('[Feature] Trips - /trips', () => {
       };
 
       let response = await request(app.getHttpServer()).post('/api/trips/');
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(HttpStatus.BAD_REQUEST);
       expect(response.body.message.length).toBe(7);
       response = await request(app.getHttpServer()).post('/api/trips/').send(newTripInvalidRequest);
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(HttpStatus.BAD_REQUEST);
       expect(response.body.message.length).toBe(7);
     });
 
@@ -174,7 +217,7 @@ describe('[Feature] Trips - /trips', () => {
       };
 
       const response = await request(app.getHttpServer()).post('/api/trips/').send(newTripRequest);
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(HttpStatus.CREATED);
       expect(response.body).toHaveProperty('id');
       expect(response.body.id.length).toBeGreaterThan(0);
       expect(newTripRequest).toEqual({
@@ -191,11 +234,11 @@ describe('[Feature] Trips - /trips', () => {
 
   describe('GET /', () => {
     it('should fail because of not valid data', async () => {
-      await request(app.getHttpServer()).get('/api/trips?page=0').expect(400);
-      await request(app.getHttpServer()).get('/api/trips?page=-1').expect(400);
-      await request(app.getHttpServer()).get('/api/trips?items_per_page=0').expect(400);
-      await request(app.getHttpServer()).get('/api/trips?items_per_page=-1').expect(400);
-      await request(app.getHttpServer()).get('/api/trips?page=&items_per_page=').expect(400);
+      await request(app.getHttpServer()).get('/api/trips?page=0').expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer()).get('/api/trips?page=-1').expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer()).get('/api/trips?items_per_page=0').expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer()).get('/api/trips?items_per_page=-1').expect(HttpStatus.BAD_REQUEST);
+      await request(app.getHttpServer()).get('/api/trips?page=&items_per_page=').expect(HttpStatus.BAD_REQUEST);
     });
 
     it('should return a list of trips', async () => {
@@ -222,7 +265,7 @@ describe('[Feature] Trips - /trips', () => {
       const trip3 = new Trip({
         origin: PlaceCode.BCN,
         destination: PlaceCode.LAX,
-        cost: 200,
+        cost: HttpStatus.OK,
         duration: 20,
         type: TripType.TRAIN,
         remoteId: '3',
@@ -232,7 +275,7 @@ describe('[Feature] Trips - /trips', () => {
       await orm.em.persistAndFlush([trip1, trip2, trip3]);
 
       let response = await request(app.getHttpServer()).get('/api/trips/');
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
       expect(response.body.items.length).toBe(3);
       expect(response.body.items[0]).toEqual({
         id: trip1.id,
@@ -250,7 +293,7 @@ describe('[Feature] Trips - /trips', () => {
       expect(response.body.items_per_page).toBe(PAGINATION.DEFAULT_ITEMS_PER_PAGE);
 
       response = await request(app.getHttpServer()).get('/api/trips?page=2&items_per_page=2');
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
       expect(response.body.items.length).toBe(1);
       expect(response.body.items[0]).toEqual({
         id: trip3.id,
@@ -270,7 +313,7 @@ describe('[Feature] Trips - /trips', () => {
 
     it('should return an empty array of trips', async () => {
       const response = await request(app.getHttpServer()).get('/api/trips/');
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
       expect(response.body.items.length).toBe(0);
       expect(response.body.current_page).toBe(PAGINATION.DEFAULT_PAGE);
       expect(response.body.total_pages).toBe(0);
@@ -304,7 +347,7 @@ describe('[Feature] Trips - /trips', () => {
       const trip3 = new Trip({
         origin: PlaceCode.BCN,
         destination: PlaceCode.LAX,
-        cost: 200,
+        cost: HttpStatus.OK,
         duration: 20,
         type: TripType.TRAIN,
         remoteId: '3',
@@ -314,7 +357,7 @@ describe('[Feature] Trips - /trips', () => {
       await orm.em.persistAndFlush([trip1, trip2, trip3]);
 
       let response = await request(app.getHttpServer()).get(`/api/trips/${trip1.id}`);
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
       expect(response.body).toEqual({
         id: trip1.id,
         origin: trip1.origin,
@@ -327,7 +370,7 @@ describe('[Feature] Trips - /trips', () => {
       });
 
       response = await request(app.getHttpServer()).get(`/api/trips/${trip2.id}`);
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HttpStatus.OK);
       expect(response.body).toEqual({
         id: trip2.id,
         origin: trip2.origin,
@@ -341,7 +384,7 @@ describe('[Feature] Trips - /trips', () => {
     });
 
     it('should fail with not found exception', async () => {
-      await request(app.getHttpServer()).get(`/api/trips/fake_id`).expect(404);
+      await request(app.getHttpServer()).get(`/api/trips/fake_id`).expect(HttpStatus.NOT_FOUND);
 
       const trip1 = new Trip({
         origin: PlaceCode.JFK,
@@ -354,7 +397,7 @@ describe('[Feature] Trips - /trips', () => {
       });
       await orm.em.persistAndFlush(trip1);
 
-      await request(app.getHttpServer()).get(`/api/trips/fake_id`).expect(404);
+      await request(app.getHttpServer()).get(`/api/trips/fake_id`).expect(HttpStatus.NOT_FOUND);
     });
   });
 
@@ -383,7 +426,7 @@ describe('[Feature] Trips - /trips', () => {
       const trip3 = new Trip({
         origin: PlaceCode.BCN,
         destination: PlaceCode.LAX,
-        cost: 200,
+        cost: HttpStatus.OK,
         duration: 20,
         type: TripType.TRAIN,
         remoteId: '3',
@@ -392,24 +435,76 @@ describe('[Feature] Trips - /trips', () => {
 
       await orm.em.persistAndFlush([trip1, trip2, trip3]);
 
+      const newUser = new User({
+        email: 'email@test.com',
+        password: 'fake-password',
+      });
+
+      await orm.em.persistAndFlush(newUser);
+
+      const accessToken = await jwtService.signAsync(
+        {
+          sub: newUser.id,
+          email: newUser.email,
+        },
+        {
+          audience: configService.get('jwt.audience'),
+          issuer: configService.get('jwt.issuer'),
+          secret: configService.get('jwt.secret'),
+          expiresIn: configService.get('jwt.accessTokenTtl'),
+        },
+      );
+
       let allTrips = await orm.em.findAll(Trip);
       expect(allTrips).toHaveLength(3);
 
-      await request(app.getHttpServer()).delete(`/api/trips/${trip2.id}`).expect(204);
+      await request(app.getHttpServer())
+        .delete(`/api/trips/${trip2.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NO_CONTENT);
       allTrips = await orm.em.findAll(Trip);
       expect(allTrips).toHaveLength(2);
 
-      await request(app.getHttpServer()).delete(`/api/trips/${trip1.id}`).expect(204);
+      await request(app.getHttpServer())
+        .delete(`/api/trips/${trip1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NO_CONTENT);
       allTrips = await orm.em.findAll(Trip);
       expect(allTrips).toHaveLength(1);
 
-      await request(app.getHttpServer()).delete(`/api/trips/${trip3.id}`).expect(204);
+      await request(app.getHttpServer())
+        .delete(`/api/trips/${trip3.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NO_CONTENT);
       allTrips = await orm.em.findAll(Trip);
       expect(allTrips).toHaveLength(0);
     });
 
     it('should fail with not found exception', async () => {
-      await request(app.getHttpServer()).delete(`/api/trips/fake_id`).expect(404);
+      const newUser = new User({
+        email: 'email@test.com',
+        password: 'fake-password',
+      });
+
+      await orm.em.persistAndFlush(newUser);
+
+      const accessToken = await jwtService.signAsync(
+        {
+          sub: newUser.id,
+          email: newUser.email,
+        },
+        {
+          audience: configService.get('jwt.audience'),
+          issuer: configService.get('jwt.issuer'),
+          secret: configService.get('jwt.secret'),
+          expiresIn: configService.get('jwt.accessTokenTtl'),
+        },
+      );
+
+      await request(app.getHttpServer())
+        .delete(`/api/trips/fake_id`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NOT_FOUND);
 
       const trip1 = new Trip({
         origin: PlaceCode.JFK,
@@ -422,8 +517,14 @@ describe('[Feature] Trips - /trips', () => {
       });
       await orm.em.persistAndFlush(trip1);
 
-      await request(app.getHttpServer()).delete(`/api/trips/fake_id`).expect(404);
-      await request(app.getHttpServer()).delete(`/api/trips/`).expect(404);
+      await request(app.getHttpServer())
+        .delete(`/api/trips/fake_id`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NOT_FOUND);
+      await request(app.getHttpServer())
+        .delete(`/api/trips/`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NOT_FOUND);
     });
   });
 

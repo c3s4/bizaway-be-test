@@ -41,6 +41,15 @@ class EnvironmentData {
   @IsPositive()
   @IsOptional()
   REDIS_CACHE_DURATION_SECONDS: number;
+
+  @IsString()
+  JWT_SECRET: string;
+  @IsString()
+  JWT_TOKEN_AUDIENCE: string;
+  @IsString()
+  JWT_TOKEN_ISSUER: string;
+  @IsPositive()
+  JWT_ACCESS_TOKEN_TTL: number;
 }
 export class EnvironmentObject {
   serverPort: number;
@@ -55,6 +64,12 @@ export class EnvironmentObject {
     host?: string;
     port?: number;
     cacheDuration?: number;
+  };
+  jwt: {
+    secret: string;
+    audience: string;
+    issuer: string;
+    accessTokenTtl: number;
   };
 }
 
@@ -81,5 +96,11 @@ export const envConfig = (): EnvironmentObject => ({
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT) || 6379,
     cacheDuration: parseInt(process.env.REDIS_CACHE_DURATION_SECONDS),
+  },
+  jwt: {
+    secret: process.env.JWT_SECRET,
+    audience: process.env.JWT_TOKEN_AUDIENCE,
+    issuer: process.env.JWT_TOKEN_ISSUER,
+    accessTokenTtl: parseInt(process.env.JWT_ACCESS_TOKEN_TTL) || 3600,
   },
 });

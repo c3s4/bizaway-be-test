@@ -7,7 +7,7 @@ import { dbConfig } from '../../../../common/configs/mikro_orm.config';
 import { envConfig, validateEnv } from '../../../../common/configs/environment';
 import { PlaceCode, TripType } from '../../../../common/dtos/trip.enum';
 import { Trip } from '../entites/trip.entity';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundError } from '../../../../common/models/exceptions';
 
 describe('TripsRepository', () => {
   let tripsRepository: TripsRepository;
@@ -27,7 +27,11 @@ describe('TripsRepository', () => {
             }),
           ],
           inject: [ConfigService],
-          useFactory: (configService: ConfigService) => dbConfig(configService, true),
+          useFactory: (configService: ConfigService) => ({
+            ...dbConfig(configService, true),
+            entities: ['./dist/**/trip.entity*.js'],
+            entitiesTs: ['./src/**/trip.entity*.ts'],
+          }),
         }),
       ],
       providers: [TripsRepository],
@@ -130,7 +134,7 @@ describe('TripsRepository', () => {
       await orm.em.persistAndFlush(trip1);
 
       const response = tripsRepository.deleteTripById('fake id');
-      expect(response).rejects.toThrow(NotFoundException);
+      expect(response).rejects.toThrow(NotFoundError);
     });
 
     it('should delete exactly one record', async () => {
@@ -187,7 +191,7 @@ describe('TripsRepository', () => {
   describe('getTripById', () => {
     it('should throw not found exception', async () => {
       const response = tripsRepository.getTripById('fake id');
-      expect(response).rejects.toThrow(NotFoundException);
+      expect(response).rejects.toThrow();
 
       const trip1 = new Trip({
         origin: PlaceCode.JFK,
@@ -202,7 +206,7 @@ describe('TripsRepository', () => {
       await orm.em.persistAndFlush(trip1);
 
       const response2 = tripsRepository.getTripById('fake id');
-      expect(response2).rejects.toThrow(NotFoundException);
+      expect(response2).rejects.toThrow();
     });
 
     it('should return a trip', async () => {

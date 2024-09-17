@@ -11,7 +11,15 @@ async function bootstrap() {
 
   configureApp(app);
 
-  const config = new DocumentBuilder().setTitle('BizAway test API').setVersion('1.0').build();
+  const config = new DocumentBuilder()
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+    })
+    .setTitle('BizAway test API')
+    .setVersion('1.0')
+    .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
