@@ -24,4 +24,8 @@ export class UsersRepository {
   async getUserById(userId: string): Promise<User> {
     return await this.em.findOneOrFail(User, { id: userId });
   }
+
+  async getUserByEmail(email: string): Promise<User> {
+    return await this.em.findOneOrFail(User, { email });
+  }
 }

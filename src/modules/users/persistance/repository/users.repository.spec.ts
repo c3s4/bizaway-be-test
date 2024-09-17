@@ -90,6 +90,26 @@ describe('UsersRepository', () => {
     });
   });
 
+  describe('getUserByEmail', () => {
+    it('should get a user by email', async () => {
+      const user = new User({ email: 'email@test.com', password: 'fake-password' });
+      await orm.em.persistAndFlush(user);
+
+      const foundUser = await usersRepository.getUserByEmail(user.email);
+      expect(foundUser).toEqual(user);
+    });
+    it('should throw if user not found', async () => {
+      let pendingPromise = usersRepository.getUserByEmail('fake@test.com');
+      expect(pendingPromise).rejects.toThrow();
+
+      const user = new User({ email: 'email@test.com', password: 'fake-password' });
+      await orm.em.persistAndFlush(user);
+
+      pendingPromise = usersRepository.getUserByEmail('fake@test.com');
+      expect(pendingPromise).rejects.toThrow();
+    });
+  });
+
   afterEach(async () => {
     await orm.schema.refreshDatabase();
     app.close();
