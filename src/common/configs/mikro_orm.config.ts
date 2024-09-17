@@ -10,6 +10,7 @@ export const dbConfig = (configService: ConfigService, isTestingEnv?: boolean) =
     clientUrl: configService.get('database.url'),
     debug: false,
     metadataProvider: TsMorphMetadataProvider,
+    ensureIndexes: true,
     metadataCache: {
       options: {
         cacheDir: '.mikro_orm_metadata',

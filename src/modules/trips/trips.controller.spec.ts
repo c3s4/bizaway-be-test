@@ -5,6 +5,9 @@ import { SearchTripResponseDto, SearchTripsRequestDto, SortBy } from './dtos/sea
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PlaceCode, TripType } from '../../common/dtos/trip.enum';
 import { SaveTripResponseDto } from './dtos/save_trip.dto';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { envConfig, validateEnv } from '../../common/configs/environment';
 
 const trips: SearchTripResponseDto[] = [
   {
@@ -97,6 +100,29 @@ describe('TripsController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [
+        ConfigModule.forRoot({
+          load: [envConfig],
+          envFilePath: '.env.test.local',
+          expandVariables: true,
+          validate: validateEnv,
+        }),
+        JwtModule.registerAsync({
+          global: true,
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: (configService: ConfigService) => {
+            return {
+              secret: configService.get('jwt.secret'),
+              signOptions: {
+                expiresIn: configService.get('jwt.accessTokenTtl'),
+                issuer: configService.get('jwt.issuer'),
+                audience: configService.get('jwt.audience'),
+              },
+            };
+          },
+        }),
+      ],
       controllers: [TripsController],
       providers: [
         {

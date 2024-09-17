@@ -9,13 +9,17 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { SearchTripResponseDto, SearchTripsListResponseDto, SearchTripsRequestDto } from './dtos/search_trips.dto';
 import { TripsService } from './service/trips.service';
 import { SaveTripRequestDto, SaveTripResponseDto } from './dtos/save_trip.dto';
 import { GetTripsListResponseDto, GetTripsRequestDto } from './dtos/get_trips.dto';
 import { ApiOkResponsePaginated } from '../../common/dtos/paged_results.dto';
+import { AccessTokenGuard } from '../auth/guards/access_token.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('trips')
 @Controller('trips')
 export class TripsController {
   private logger = new Logger(TripsController.name);
@@ -47,8 +51,10 @@ export class TripsController {
     return await this.tripService.getTripById(id);
   }
 
+  @ApiBearerAuth()
   @Delete('/:id')
   @HttpCode(204)
+  @UseGuards(AccessTokenGuard)
   async deleteTripById(@Param('id') id: string) {
     await this.tripService.deleteTripById(id);
   }

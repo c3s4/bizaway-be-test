@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import {
   SearchTripIntegrationResponseDto,
   SearchTripResponseDto,
@@ -140,11 +140,19 @@ export class TripsService {
   }
 
   async deleteTripById(tripId: string): Promise<void> {
-    await this.tripsRepository.deleteTripById(tripId);
+    try {
+      await this.tripsRepository.deleteTripById(tripId);
+    } catch (error) {
+      throw new NotFoundException();
+    }
   }
 
   async getTripById(tripId: string): Promise<SaveTripResponseDto> {
-    const trip = await this.tripsRepository.getTripById(tripId);
-    return new SaveTripResponseDto(trip);
+    try {
+      const trip = await this.tripsRepository.getTripById(tripId);
+      return new SaveTripResponseDto(trip);
+    } catch (error) {
+      throw new NotFoundException();
+    }
   }
 }

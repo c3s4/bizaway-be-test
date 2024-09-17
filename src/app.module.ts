@@ -5,6 +5,9 @@ import { envConfig, validateEnv } from './common/configs/environment';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { dbConfig } from './common/configs/mikro_orm.config';
 import { RedisModule } from './modules/redis/redis.module';
+import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -31,6 +34,23 @@ import { RedisModule } from './modules/redis/redis.module';
         };
       },
     }),
+    JwtModule.registerAsync({
+      global: true,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          secret: configService.get('jwt.secret'),
+          signOptions: {
+            expiresIn: configService.get('jwt.accessTokenTtl'),
+            issuer: configService.get('jwt.issuer'),
+            audience: configService.get('jwt.audience'),
+          },
+        };
+      },
+    }),
+    UsersModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
