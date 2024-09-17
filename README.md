@@ -4,7 +4,29 @@ This project is a backend test for BizAway. It provides a set of APIs to demonst
 
 ## Table of Contents
 
-[TOC]
+- [1. Requirements](#1-requirements)
+  - [1.1. Docker and Docker Compose](#11-docker-and-docker-compose)
+  - [1.2. Prepare .env](#12-prepare-env)
+  - [1.3. [_Optional_] Node.js and package manager](#13-optional-nodejs-and-package-manager)
+- [2. How to Run](#2-how-to-run)
+  - [2.1. Method 1: Using Docker (preferred)](#21-method-1-using-docker-preferred)
+  - [2.2. Method 2: Using pnpm](#22-method-2-using-pnpm)
+  - [2.3. Method 3: Running Tests](#23-method-3-running-tests)
+- [3. How to Use](#3-how-to-use)
+  - [3.1. Trips resource](#31-trips-resource)
+    - [3.1.1. GET /api/trips/search](#311-get-apitripssearch)
+    - [3.1.2. POST /api/trips/](#312-post-apitrips)
+    - [3.1.3. GET /api/trips/](#313-get-apitrips)
+    - [3.1.4. GET /api/trips/:id](#314-get-apitripsid)
+    - [3.1.5. DELETE /api/trips/:id](#315-delete-apitripsid)
+      - [Authentication](#authentication)
+  - [3.2 Authentication resource](#32-authentication-resource)
+    - [3.2.1. POST /api/auth/register](#321-post-apiauthregister)
+    - [3.2.2. POST /api/auth/login](#322-post-apiauthlogin)
+- [Bonus](#bonus)
+  - [Caching](#caching)
+  - [Authentication](#authentication-1)
+- [Assumptions](#assumptions)
 
 ---
 
