@@ -5,6 +5,9 @@ import { RegisterRequestDTO, RegisterResponseDTO } from '../dtos/register.dto';
 import { UsersRepository } from '../../users/persistance/repository/users.repository';
 import { ConflictException, InternalServerErrorException } from '@nestjs/common';
 import { UniqueConstraintError } from '../../../common/models/exceptions';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
+import { envConfig, validateEnv } from '../../../common/configs/environment';
 
 const mockedUser = {
   id: 'fake-id',
@@ -19,6 +22,14 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [
+        ConfigModule.forRoot({
+          load: [envConfig],
+          envFilePath: '.env.test.local',
+          expandVariables: true,
+          validate: validateEnv,
+        }),
+      ],
       providers: [
         AuthService,
         {
@@ -32,6 +43,12 @@ describe('AuthService', () => {
           provide: UsersRepository,
           useValue: {
             createUser: jest.fn().mockResolvedValue(mockedUser),
+          },
+        },
+        {
+          provide: JwtService,
+          useValue: {
+            signAsync: jest.fn().mockResolvedValue('fake-token'),
           },
         },
       ],

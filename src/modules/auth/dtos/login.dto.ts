@@ -7,3 +7,7 @@ export class LoginRequestDTO {
   @MinLength(8)
   password: string;
 }
+
+export class LoginResponseDTO {
+  accessToken: string;
+}
