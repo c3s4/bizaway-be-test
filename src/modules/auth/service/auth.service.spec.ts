@@ -3,11 +3,12 @@ import { AuthService } from './auth.service';
 import { HashingService } from './hashing.service';
 import { RegisterRequestDTO, RegisterResponseDTO } from '../dtos/register.dto';
 import { UsersRepository } from '../../users/persistance/repository/users.repository';
-import { ConflictException, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { UniqueConstraintError } from '../../../common/models/exceptions';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { envConfig, validateEnv } from '../../../common/configs/environment';
+import { LoginRequestDTO } from '../dtos/login.dto';
 
 const mockedUser = {
   id: 'fake-id',
@@ -36,13 +37,14 @@ describe('AuthService', () => {
           provide: HashingService,
           useValue: {
             hash: jest.fn().mockResolvedValue('hashed-password'),
-            compare: jest.fn(),
+            compare: jest.fn().mockResolvedValue(true),
           },
         },
         {
           provide: UsersRepository,
           useValue: {
             createUser: jest.fn().mockResolvedValue(mockedUser),
+            getUserByEmail: jest.fn().mockResolvedValue(mockedUser),
           },
         },
         {
@@ -92,5 +94,25 @@ describe('AuthService', () => {
       expect(pendingPromise).rejects.toThrow(InternalServerErrorException);
     });
   });
-  describe('login', () => {});
+  describe('login', () => {
+    it('should login a user', async () => {
+      const loginRequest: LoginRequestDTO = { email: 'email@test.com', password: 'login-password' };
+      const loggedUser = await service.login(loginRequest);
+
+      expect(loggedUser).toEqual({ accessToken: 'fake-token' });
+    });
+
+    it('should throw UnauthorizedException because user not found', async () => {
+      usersRepository.getUserByEmail = jest.fn().mockRejectedValue(new Error('User not found'));
+      const pendingResponse = service.login({ email: 'email@test.com', password: 'login-password' });
+
+      expect(pendingResponse).rejects.toThrow(UnauthorizedException);
+    });
+    it('should throw UnauthorizedException because password is incorrect', async () => {
+      hashingService.compare = jest.fn().mockResolvedValue(false);
+      const pendingResponse = service.login({ email: 'email@test.com', password: 'login-password' });
+
+      expect(pendingResponse).rejects.toThrow(UnauthorizedException);
+    });
+  });
 });

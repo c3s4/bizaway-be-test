@@ -41,7 +41,6 @@ export class AuthService {
         accessToken,
       };
     } catch (error) {
-      console.log(error);
       throw new UnauthorizedException('Invalid email or password');
     }
   }
