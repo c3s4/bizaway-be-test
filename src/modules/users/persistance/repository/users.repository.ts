@@ -1,16 +1,15 @@
 import { EntityManager, UniqueConstraintViolationException } from '@mikro-orm/mongodb';
 import { Injectable } from '@nestjs/common';
 import { User } from '../entities/user.entity';
-import { CreateUserRequestDto } from '../../dtos/create-user.dto';
 import { UniqueConstraintError } from '../../../../common/models/exceptions';
 
 @Injectable()
 export class UsersRepository {
   constructor(private em: EntityManager) {}
 
-  async createUser(createUserDto: CreateUserRequestDto): Promise<User> {
+  async createUser(userData: { email: string; password: string }): Promise<User> {
     try {
-      const user = new User(createUserDto);
+      const user = new User(userData);
       await this.em.persistAndFlush(user);
       return user;
     } catch (error) {
