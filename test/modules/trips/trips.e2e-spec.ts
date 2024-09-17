@@ -35,7 +35,11 @@ describe('[Feature] Trips - /trips', () => {
             }),
           ],
           inject: [ConfigService],
-          useFactory: (configService: ConfigService) => dbConfig(configService, true),
+          useFactory: (configService: ConfigService) => ({
+            ...dbConfig(configService, true),
+            entities: ['./dist/**/trip.entity*.js'],
+            entitiesTs: ['./src/**/trip.entity*.ts'],
+          }),
         }),
         TripsModule,
         RedisModule.registerAsync({
