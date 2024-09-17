@@ -14,10 +14,10 @@ This project is a backend test for BizAway. It provides a set of APIs to demonst
   - [2.3. Method 3: Running Tests](#23-method-3-running-tests)
 - [3. How to Use](#3-how-to-use)
   - [3.1. GET /api/trips/search](#31-get-apitripssearch)
-  - [3.1.2. POST /api/trips/](#312-post-apitrips)
-  - [3.1.3. GET /api/trips/](#313-get-apitrips)
-  - [3.1.4. GET /api/trips/:id](#314-get-apitripsid)
-  - [3.1.5. DELETE /api/trips/:id](#315-delete-apitripsid)
+  - [3.2. POST /api/trips/](#32-post-apitrips)
+  - [3.3. GET /api/trips/](#33-get-apitrips)
+  - [3.4. GET /api/trips/:id](#34-get-apitripsid)
+  - [3.5. DELETE /api/trips/:id](#35-delete-apitripsid)
 - [Bonus](#bonus)
   - [Caching](#caching)
   - [Authentication](#authentication)
@@ -237,7 +237,7 @@ The response will be a list of trips, like this one:
 }
 ```
 
-### 3.1.2. POST /api/trips/
+### 3.2. POST /api/trips/
 
 This endpoint is responsible to save a trip. The body of the request should be like this:
 
@@ -264,7 +264,7 @@ All the fields are mandatory:
 
 You have to set the content type of the request to `application/json`.
 
-### 3.1.3. GET /api/trips/
+### 3.3. GET /api/trips/
 
 This endpoint is responsible to list all the saved trips. The url parameters are:
 
@@ -310,7 +310,7 @@ It'll return a list of trips like this:
 }
 ```
 
-### 3.1.4. GET /api/trips/:id
+### 3.4. GET /api/trips/:id
 
 This is a simple endpoint to get a trip by its `id`. The request url should be like this:
 
@@ -333,7 +333,7 @@ The response will be like this:
 }
 ```
 
-### 3.1.5. DELETE /api/trips/:id
+### 3.5. DELETE /api/trips/:id
 
 To delete a trip, you can use this endpoint. Just use the `id` as a parameter in the URL. The response will be an empty response with status code 204.
 
