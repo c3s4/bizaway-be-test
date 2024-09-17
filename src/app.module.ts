@@ -6,6 +6,7 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { dbConfig } from './common/configs/mikro_orm.config';
 import { RedisModule } from './modules/redis/redis.module';
 import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { UsersModule } from './modules/users/users.module';
       },
     }),
     UsersModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
