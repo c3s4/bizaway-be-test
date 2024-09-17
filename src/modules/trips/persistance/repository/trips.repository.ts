@@ -1,7 +1,8 @@
-import { EntityManager, NotFoundError } from '@mikro-orm/mongodb';
+import { EntityManager } from '@mikro-orm/mongodb';
 import { Injectable } from '@nestjs/common';
 import { Trip } from '../entites/trip.entity';
 import { SaveTripRequestDto } from '../../dtos/save_trip.dto';
+import { NotFoundError } from '../../../../common/models/exceptions';
 
 @Injectable()
 export class TripsRepository {

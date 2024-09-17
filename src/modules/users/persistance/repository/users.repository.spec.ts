@@ -6,6 +6,7 @@ import { dbConfig } from '../../../../common/configs/mikro_orm.config';
 import { envConfig, validateEnv } from '../../../../common/configs/environment';
 import { UsersRepository } from './users.repository';
 import { User } from '../entities/user.entity';
+import { UniqueConstraintError } from '../../../../common/models/exceptions';
 
 describe('UsersRepository', () => {
   let usersRepository: UsersRepository;
@@ -65,7 +66,7 @@ describe('UsersRepository', () => {
         password: 'fake-password',
       });
 
-      expect(pendingPromise).rejects.toThrow();
+      expect(pendingPromise).rejects.toThrow(UniqueConstraintError);
     });
   });
 

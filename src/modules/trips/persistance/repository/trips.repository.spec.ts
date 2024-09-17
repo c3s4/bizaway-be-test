@@ -1,4 +1,4 @@
-import { MikroORM, NotFoundError } from '@mikro-orm/mongodb';
+import { MikroORM } from '@mikro-orm/mongodb';
 import { TripsRepository } from './trips.repository';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
@@ -7,6 +7,7 @@ import { dbConfig } from '../../../../common/configs/mikro_orm.config';
 import { envConfig, validateEnv } from '../../../../common/configs/environment';
 import { PlaceCode, TripType } from '../../../../common/dtos/trip.enum';
 import { Trip } from '../entites/trip.entity';
+import { NotFoundError } from '../../../../common/models/exceptions';
 
 describe('TripsRepository', () => {
   let tripsRepository: TripsRepository;
