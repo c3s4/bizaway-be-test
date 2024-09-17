@@ -1,16 +1,4 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  Logger,
-  Param,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Logger, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { SearchTripResponseDto, SearchTripsListResponseDto, SearchTripsRequestDto } from './dtos/search_trips.dto';
 import { TripsService } from './service/trips.service';
 import { SaveTripRequestDto, SaveTripResponseDto } from './dtos/save_trip.dto';
@@ -28,11 +16,7 @@ export class TripsController {
   @Get('/search')
   @ApiOkResponsePaginated(SearchTripResponseDto)
   async searchTrips(@Query() searchParams: SearchTripsRequestDto): Promise<SearchTripsListResponseDto> {
-    const foundTrips = await this.tripService.searchTripsFromIntegration(searchParams);
-    if (foundTrips && searchParams.page && searchParams.page > 1 && foundTrips.totalPages < searchParams.page) {
-      throw new BadRequestException('Page number is too high');
-    }
-    return foundTrips;
+    return await this.tripService.searchTripsFromIntegration(searchParams);
   }
 
   @Post('/')

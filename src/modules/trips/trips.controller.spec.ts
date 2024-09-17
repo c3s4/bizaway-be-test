@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TripsController } from './trips.controller';
 import { TripsService } from './service/trips.service';
 import { SearchTripResponseDto, SearchTripsRequestDto, SortBy } from './dtos/search_trips.dto';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { PlaceCode, TripType } from '../../common/dtos/trip.enum';
 import { SaveTripResponseDto } from './dtos/save_trip.dto';
 import { JwtModule } from '@nestjs/jwt';
@@ -199,17 +199,6 @@ describe('TripsController', () => {
       };
       await controller.searchTrips(searchParams);
       expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
-    });
-
-    it('should throw an error if the page number is too high', async () => {
-      const searchParams: SearchTripsRequestDto = {
-        origin: PlaceCode.BCN,
-        destination: PlaceCode.LAX,
-        page: 3,
-      };
-      const foundTrips = controller.searchTrips(searchParams);
-      expect(tripService.searchTripsFromIntegration).toHaveBeenCalledWith(searchParams);
-      await expect(foundTrips).rejects.toThrow(BadRequestException);
     });
   });
 
