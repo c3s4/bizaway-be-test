@@ -68,6 +68,7 @@ describe('[Feature] Auth - /auth', () => {
       });
 
       expect(response.status).toBe(HttpStatus.OK);
+      expect(response.body.accessToken).toBeDefined();
     });
 
     it('should return a BadRequestException', async () => {
