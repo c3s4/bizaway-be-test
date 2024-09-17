@@ -95,7 +95,7 @@ export const envConfig = (): EnvironmentObject => ({
   redis: {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT) || 6379,
-    cacheDuration: parseInt(process.env.REDIS_CACHE_DURATION_SECONDS),
+    cacheDuration: parseInt(process.env.REDIS_CACHE_DURATION_SECONDS) || 60,
   },
   jwt: {
     secret: process.env.JWT_SECRET,
