@@ -13,18 +13,18 @@ export class AuthService {
   ) {}
 
   async login(loginRequest: LoginRequestDTO): Promise<boolean> {
-    const user = await this.usersRepository.getUserByEmail(loginRequest.email);
+    try {
+      const user = await this.usersRepository.getUserByEmail(loginRequest.email);
+      const isPasswordCorrect = await this.hashingService.compare(loginRequest.password, user.password);
 
-    if (!user) {
+      if (!isPasswordCorrect) {
+        throw new UnauthorizedException('Invalid email or password');
+      }
+
+      return true;
+    } catch (error) {
       throw new UnauthorizedException('Invalid email or password');
     }
-
-    const isPasswordCorrect = await this.hashingService.compare(loginRequest.password, user.password);
-    if (!isPasswordCorrect) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
-
-    return true;
   }
 
   async register(registerRequest: RegisterRequestDTO): Promise<RegisterResponseDTO> {
