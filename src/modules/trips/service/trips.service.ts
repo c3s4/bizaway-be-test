@@ -48,6 +48,7 @@ export class TripsService {
 
     if (cachedTrips) {
       tripsList = JSON.parse(cachedTrips);
+      this.logger.log(`Data fetched from cache. Trips count: ${tripsList.length}`);
     } else {
       const response = await lastValueFrom(
         this.httpService
