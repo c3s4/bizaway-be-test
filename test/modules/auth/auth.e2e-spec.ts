@@ -11,6 +11,7 @@ import { AuthModule } from '../../../src/modules/auth/auth.module';
 import { User } from '../../../src/modules/users/persistance/entities/user.entity';
 import { HashingService } from '../../../src/modules/auth/service/hashing.service';
 import { UsersRepository } from '../../../src/modules/users/persistance/repository/users.repository';
+import { JwtModule } from '@nestjs/jwt';
 
 describe('[Feature] Auth - /auth', () => {
   let app: INestApplication;
@@ -41,6 +42,21 @@ describe('[Feature] Auth - /auth', () => {
             entities: ['./dist/**/user.entity*.js'],
             entitiesTs: ['./src/**/user.entity*.ts'],
           }),
+        }),
+        JwtModule.registerAsync({
+          global: true,
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: (configService: ConfigService) => {
+            return {
+              secret: configService.get('jwt.secret'),
+              signOptions: {
+                expiresIn: configService.get('jwt.accessTokenTtl'),
+                issuer: configService.get('jwt.issuer'),
+                audience: configService.get('jwt.audience'),
+              },
+            };
+          },
         }),
         AuthModule,
       ],
