@@ -12,10 +12,14 @@ import { Trip } from '../../../src/modules/trips/persistance/entites/trip.entity
 import { PlaceCode, TripType } from '../../../src/common/dtos/trip.enum';
 import { PAGINATION } from '../../../src/common/configs/constants';
 import { RedisModule } from '../../../src/modules/redis/redis.module';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { User } from '../../../src/modules/users/persistance/entities/user.entity';
 
 describe('[Feature] Trips - /trips', () => {
   let app: INestApplication;
   let orm: MikroORM;
+  let jwtService: JwtService;
+  let configService: ConfigService;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -37,9 +41,22 @@ describe('[Feature] Trips - /trips', () => {
           inject: [ConfigService],
           useFactory: (configService: ConfigService) => ({
             ...dbConfig(configService, true),
-            entities: ['./dist/**/trip.entity*.js'],
-            entitiesTs: ['./src/**/trip.entity*.ts'],
           }),
+        }),
+        JwtModule.registerAsync({
+          global: true,
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: (configService: ConfigService) => {
+            return {
+              secret: configService.get('jwt.secret'),
+              signOptions: {
+                expiresIn: configService.get('jwt.accessTokenTtl'),
+                issuer: configService.get('jwt.issuer'),
+                audience: configService.get('jwt.audience'),
+              },
+            };
+          },
         }),
         TripsModule,
         RedisModule.registerAsync({
@@ -58,6 +75,8 @@ describe('[Feature] Trips - /trips', () => {
 
     app = moduleFixture.createNestApplication();
     orm = app.get<MikroORM>(MikroORM);
+    jwtService = moduleFixture.get<JwtService>(JwtService);
+    configService = moduleFixture.get<ConfigService>(ConfigService);
     configureApp(app);
 
     await app.init();
@@ -416,24 +435,76 @@ describe('[Feature] Trips - /trips', () => {
 
       await orm.em.persistAndFlush([trip1, trip2, trip3]);
 
+      const newUser = new User({
+        email: 'email@test.com',
+        password: 'fake-password',
+      });
+
+      await orm.em.persistAndFlush(newUser);
+
+      const accessToken = await jwtService.signAsync(
+        {
+          sub: newUser.id,
+          email: newUser.email,
+        },
+        {
+          audience: configService.get('jwt.audience'),
+          issuer: configService.get('jwt.issuer'),
+          secret: configService.get('jwt.secret'),
+          expiresIn: configService.get('jwt.accessTokenTtl'),
+        },
+      );
+
       let allTrips = await orm.em.findAll(Trip);
       expect(allTrips).toHaveLength(3);
 
-      await request(app.getHttpServer()).delete(`/api/trips/${trip2.id}`).expect(HttpStatus.NO_CONTENT);
+      await request(app.getHttpServer())
+        .delete(`/api/trips/${trip2.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NO_CONTENT);
       allTrips = await orm.em.findAll(Trip);
       expect(allTrips).toHaveLength(2);
 
-      await request(app.getHttpServer()).delete(`/api/trips/${trip1.id}`).expect(HttpStatus.NO_CONTENT);
+      await request(app.getHttpServer())
+        .delete(`/api/trips/${trip1.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NO_CONTENT);
       allTrips = await orm.em.findAll(Trip);
       expect(allTrips).toHaveLength(1);
 
-      await request(app.getHttpServer()).delete(`/api/trips/${trip3.id}`).expect(HttpStatus.NO_CONTENT);
+      await request(app.getHttpServer())
+        .delete(`/api/trips/${trip3.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NO_CONTENT);
       allTrips = await orm.em.findAll(Trip);
       expect(allTrips).toHaveLength(0);
     });
 
     it('should fail with not found exception', async () => {
-      await request(app.getHttpServer()).delete(`/api/trips/fake_id`).expect(HttpStatus.NOT_FOUND);
+      const newUser = new User({
+        email: 'email@test.com',
+        password: 'fake-password',
+      });
+
+      await orm.em.persistAndFlush(newUser);
+
+      const accessToken = await jwtService.signAsync(
+        {
+          sub: newUser.id,
+          email: newUser.email,
+        },
+        {
+          audience: configService.get('jwt.audience'),
+          issuer: configService.get('jwt.issuer'),
+          secret: configService.get('jwt.secret'),
+          expiresIn: configService.get('jwt.accessTokenTtl'),
+        },
+      );
+
+      await request(app.getHttpServer())
+        .delete(`/api/trips/fake_id`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NOT_FOUND);
 
       const trip1 = new Trip({
         origin: PlaceCode.JFK,
@@ -446,8 +517,14 @@ describe('[Feature] Trips - /trips', () => {
       });
       await orm.em.persistAndFlush(trip1);
 
-      await request(app.getHttpServer()).delete(`/api/trips/fake_id`).expect(HttpStatus.NOT_FOUND);
-      await request(app.getHttpServer()).delete(`/api/trips/`).expect(HttpStatus.NOT_FOUND);
+      await request(app.getHttpServer())
+        .delete(`/api/trips/fake_id`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NOT_FOUND);
+      await request(app.getHttpServer())
+        .delete(`/api/trips/`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.NOT_FOUND);
     });
   });
 
