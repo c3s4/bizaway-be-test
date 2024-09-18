@@ -2,6 +2,8 @@
 
 This project is a backend test for BizAway. It provides a set of APIs to demonstrate backend capabilities and handle specific tasks.
 
+This project is a Node.js application, built with NestJS. The database used is MongoDB, and the cache system is Redis.
+
 ## Table of Contents
 
 - [1. Requirements](#1-requirements)
